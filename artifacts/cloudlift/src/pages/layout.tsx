@@ -9,6 +9,7 @@ import {
   Settings,
   Shield,
   LogOut,
+  Cloud,
 } from "lucide-react";
 
 const navItems = [
@@ -16,6 +17,7 @@ const navItems = [
   { href: "/repositories", label: "Repositories", icon: GitBranch },
   { href: "/launch", label: "Launch Center", icon: Rocket },
   { href: "/services", label: "Services", icon: Zap },
+  { href: "/cloud-accounts", label: "Cloud Accounts", icon: Cloud },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 

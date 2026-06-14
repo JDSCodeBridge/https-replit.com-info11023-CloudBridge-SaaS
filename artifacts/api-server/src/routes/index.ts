@@ -7,6 +7,7 @@ import servicesRouter from "./services";
 import subscriptionsRouter from "./subscriptions";
 import dashboardRouter from "./dashboard";
 import adminRouter from "./admin";
+import cloudAccountsRouter from "./cloudAccounts";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use("/services", servicesRouter);
 router.use("/subscriptions", subscriptionsRouter);
 router.use("/dashboard", dashboardRouter);
 router.use("/admin", adminRouter);
+router.use("/cloud-accounts", cloudAccountsRouter);
 
 export default router;

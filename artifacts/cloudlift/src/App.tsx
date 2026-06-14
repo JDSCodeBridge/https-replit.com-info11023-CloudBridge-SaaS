@@ -15,6 +15,7 @@ import Services from "./pages/services";
 import Pricing from "./pages/pricing";
 import Launch from "./pages/launch";
 import Settings from "./pages/settings";
+import CloudAccounts from "./pages/cloud-accounts";
 import Admin from "./pages/admin";
 import NotFound from "./pages/not-found";
 import Terms from "./pages/terms";
@@ -144,6 +145,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/services" component={() => <Protected component={Services} />} />
             <Route path="/launch" component={() => <Protected component={Launch} />} />
             <Route path="/settings" component={() => <Protected component={Settings} />} />
+            <Route path="/cloud-accounts" component={() => <Protected component={CloudAccounts} />} />
             <Route path="/admin" component={() => <Protected component={Admin} />} />
             <Route path="/pricing" component={Pricing} />
             <Route path="/terms" component={Terms} />
