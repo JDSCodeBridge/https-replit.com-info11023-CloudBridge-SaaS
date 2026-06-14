@@ -49,14 +49,11 @@ export default function Pricing() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
       <header className="flex items-center justify-between px-8 py-5 border-b border-border/40 sticky top-0 bg-background/80 backdrop-blur z-10">
-        <Link href="/" className="flex items-center gap-2.5">
-            <div className="w-7 h-7 rounded-md bg-gradient-to-tr from-primary to-accent flex items-center justify-center">
-              <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-background" stroke="currentColor" strokeWidth="2.5">
-                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-              </svg>
-            </div>
-            <span className="font-bold text-sm tracking-tight">CloudLift</span>
-          </Link>
+        <Link href="/">
+          <div className="bg-white rounded-lg px-2 py-1">
+            <img src="/logo.png" alt="CodeLift" className="h-9 w-auto" />
+          </div>
+        </Link>
         <div className="flex gap-4">
           <Link href="/sign-in"><a className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign In</a></Link>
           <Button asChild size="sm" className="bg-primary text-primary-foreground">

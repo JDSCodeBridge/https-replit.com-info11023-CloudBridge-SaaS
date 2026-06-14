@@ -28,12 +28,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-[100dvh] flex bg-background">
       <aside className="w-64 border-r border-border/40 bg-card/20 flex flex-col fixed inset-y-0 left-0 z-30">
         <div className="p-5 border-b border-border/40 flex items-center gap-3">
-          <div className="w-7 h-7 rounded-md bg-gradient-to-tr from-primary to-accent flex items-center justify-center shrink-0">
-            <svg viewBox="0 0 24 24" fill="none" className="w-4 h-4 text-background" stroke="currentColor" strokeWidth="2.5">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
+          <div className="bg-white rounded-lg px-2 py-1">
+            <img src="/logo.png" alt="CodeLift" className="h-9 w-auto" />
           </div>
-          <span className="font-bold text-sm tracking-tight">CloudLift</span>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">

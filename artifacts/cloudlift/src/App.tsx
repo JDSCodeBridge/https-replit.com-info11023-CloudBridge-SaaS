@@ -40,6 +40,11 @@ if (!clerkPubKey) {
 const clerkAppearance = {
   baseTheme: dark,
   cssLayerName: "clerk",
+  options: {
+    logoPlacement: "inside" as const,
+    logoLinkUrl: basePath || "/",
+    logoImageUrl: `${window.location.origin}${basePath}/logo.png`,
+  },
   variables: {
     colorPrimary: "hsl(190, 90%, 50%)",
     colorForeground: "hsl(210, 40%, 98%)",

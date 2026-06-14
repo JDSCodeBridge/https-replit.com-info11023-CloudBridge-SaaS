@@ -5,13 +5,8 @@ export default function Landing() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground selection:bg-primary/30">
       <header className="flex items-center justify-between px-8 py-6 border-b border-border/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-md bg-gradient-to-tr from-primary to-accent flex items-center justify-center">
-            <svg viewBox="0 0 24 24" fill="none" className="w-5 h-5 text-white" stroke="currentColor" strokeWidth="2">
-              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-            </svg>
-          </div>
-          <span className="font-bold text-xl tracking-tight">CloudLift</span>
+        <div className="bg-white rounded-xl px-3 py-1.5">
+          <img src="/logo.png" alt="CodeLift" className="h-10 w-auto" />
         </div>
         <nav className="hidden md:flex gap-8 text-sm font-medium text-muted-foreground">
           <Link href="#features" className="hover:text-foreground transition-colors">Features</Link>
