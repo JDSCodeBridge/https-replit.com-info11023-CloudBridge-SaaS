@@ -61,11 +61,15 @@ router.post("/checkout", requireAuth, async (req, res) => {
     const domain = process.env.REPLIT_DOMAINS?.split(",")[0];
     const baseUrl = domain ? `https://${domain}` : "http://localhost";
 
+    // Determine mode: Pro yearly price → subscription, everything else → one-time payment
+    const proPriceId = process.env.STRIPE_PRICE_PRO_YEARLY;
+    const mode: "subscription" | "payment" = priceId === proPriceId ? "subscription" : "payment";
+
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
       line_items: [{ price: priceId, quantity: 1 }],
-      mode: "subscription",
+      mode,
       success_url: `${baseUrl}/dashboard?checkout=success`,
       cancel_url: `${baseUrl}/pricing`,
       allow_promotion_codes: true,
