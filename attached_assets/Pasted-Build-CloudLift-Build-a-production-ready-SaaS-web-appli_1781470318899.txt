@@ -1,0 +1,285 @@
+Build CloudLift
+
+Build a production-ready SaaS web application called CloudLift.
+
+Vision
+
+CloudLift helps non-technical users launch AI-built applications to production.
+
+Users build apps using Replit, Claude Code, Cursor, Lovable, Bolt, GitHub, or other AI coding tools.
+
+CloudLift analyzes their repository and helps them deploy to cloud providers and app stores.
+
+The platform should feel like “TurboTax for app deployment.”
+
+⸻
+
+Core User Flow
+
+Step 1: User Registration
+
+Users can:
+
+* Create account
+* Login
+* Reset password
+
+Authentication:
+
+* Email/password
+* Google OAuth
+* GitHub OAuth
+
+⸻
+
+Step 2: Connect Repository
+
+Users can:
+
+* Connect GitHub account
+* Select repository
+
+Display:
+
+* Repository name
+* Framework detected
+* Last update
+* Deployment status
+
+⸻
+
+Step 3: AI Repository Analysis
+
+Scan repository and detect:
+
+Frontend:
+
+* React
+* Next.js
+* Vue
+* Angular
+* Svelte
+
+Backend:
+
+* Node.js
+* Python
+* Flask
+* Django
+* FastAPI
+* Express
+
+Database:
+
+* PostgreSQL
+* MySQL
+* MongoDB
+* Supabase
+
+Output:
+
+Deployment Readiness Score
+
+Example:
+
+* Infrastructure: 90%
+* Security: 80%
+* Environment Variables: Missing
+* Database Configuration: Complete
+
+Generate recommendations.
+
+⸻
+
+Step 4: Deployment Wizard
+
+Offer deployment options:
+
+Cloud:
+
+* AWS
+* Azure
+* Google Cloud
+* DigitalOcean
+
+Mobile:
+
+* Apple App Store
+* Google Play Store
+
+Show:
+
+* Difficulty
+* Estimated cost
+* Estimated deployment time
+
+⸻
+
+Step 5: Concierge Services
+
+Buttons:
+
+Deploy For Me
+
+Publish For Me
+
+Set Up Cloud Infrastructure
+
+App Store Submission Help
+
+Collect service requests.
+
+⸻
+
+Step 6: Payments
+
+Integrate Stripe.
+
+Plans:
+
+Free
+
+* One repository
+
+Pro
+
+* $49.99/year
+* Unlimited repositories
+* AI analysis
+
+Launch Package
+
+* $149 one-time
+
+Apple Publishing Package
+
+* $299 one-time
+
+⸻
+
+Step 7: Admin Dashboard
+
+Admin can:
+
+* View users
+* View repositories
+* View payments
+* View deployment requests
+* View publishing requests
+
+⸻
+
+UI Requirements
+
+Design should look like a modern SaaS product.
+
+Style inspiration:
+
+* Linear
+* Stripe
+* Vercel
+
+Requirements:
+
+* Dark mode
+* Mobile responsive
+* Clean dashboard
+* Modern typography
+* Fast loading
+
+⸻
+
+Dashboard Sections
+
+Overview
+
+Display:
+
+* Connected repositories
+* Deployment readiness score
+* Recent activity
+
+Repository Details
+
+Display:
+
+* Framework
+* Dependencies
+* Environment variables
+* Deployment recommendations
+
+Launch Center
+
+Show:
+
+* AWS deployment
+* Azure deployment
+* Google Cloud deployment
+* Apple App Store publishing
+* Google Play publishing
+
+⸻
+
+AI Features
+
+Use AI to:
+
+* Analyze codebase
+* Detect deployment requirements
+* Generate deployment plans
+* Generate infrastructure recommendations
+* Generate App Store submission checklists
+
+⸻
+
+Database
+
+Create database schema for:
+
+Users
+
+Repositories
+
+Deployments
+
+Publishing Requests
+
+Payments
+
+Support Tickets
+
+Subscriptions
+
+⸻
+
+Security
+
+Implement:
+
+* OAuth security
+* Rate limiting
+* Input validation
+* Secure API handling
+* Role-based access control
+
+⸻
+
+Deliverables
+
+Build a complete MVP.
+
+Generate:
+
+* Frontend
+* Backend
+* Database schema
+* Authentication
+* Stripe integration
+* GitHub integration
+* Admin dashboard
+
+Use a scalable architecture suitable for future expansion.
+
+⸻
+
+One recommendation: don’t build AWS, Azure, Apple, and Google Play automation first. Have CloudLift analyze repositories and sell “Deploy For Me” services initially. You’ll get to market much faster and can add automation after you’ve proven customers will pay.

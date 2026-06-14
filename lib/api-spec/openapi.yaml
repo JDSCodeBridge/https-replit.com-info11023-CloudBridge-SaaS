@@ -1,22 +1,35 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: CloudLift API specification
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: users
+    description: User management
+  - name: repositories
+    description: Repository management
+  - name: deployments
+    description: Deployment management
+  - name: services
+    description: Concierge service requests
+  - name: subscriptions
+    description: Subscription and payment management
+  - name: admin
+    description: Admin operations
+  - name: dashboard
+    description: Dashboard summary data
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +37,410 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  # ── Users ──────────────────────────────────────────────────────────────────
+  /users/me:
+    get:
+      operationId: getMyProfile
+      tags: [users]
+      summary: Get current user profile
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+        "401":
+          description: Unauthorized
+    patch:
+      operationId: updateMyProfile
+      tags: [users]
+      summary: Update current user profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfile"
+
+  # ── Repositories ────────────────────────────────────────────────────────────
+  /repositories:
+    get:
+      operationId: listRepositories
+      tags: [repositories]
+      summary: List user repositories
+      responses:
+        "200":
+          description: List of repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Repository"
+    post:
+      operationId: connectRepository
+      tags: [repositories]
+      summary: Connect a repository
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RepositoryInput"
+      responses:
+        "201":
+          description: Connected repository
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Repository"
+
+  /repositories/{id}:
+    get:
+      operationId: getRepository
+      tags: [repositories]
+      summary: Get a repository by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Repository
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Repository"
+        "404":
+          description: Not found
+    delete:
+      operationId: deleteRepository
+      tags: [repositories]
+      summary: Remove a connected repository
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /repositories/{id}/analyze:
+    post:
+      operationId: analyzeRepository
+      tags: [repositories]
+      summary: Trigger AI analysis of a repository
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepositoryAnalysis"
+
+  /repositories/{id}/analysis:
+    get:
+      operationId: getRepositoryAnalysis
+      tags: [repositories]
+      summary: Get the latest analysis for a repository
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RepositoryAnalysis"
+        "404":
+          description: No analysis yet
+
+  # ── Deployments ─────────────────────────────────────────────────────────────
+  /deployments:
+    get:
+      operationId: listDeployments
+      tags: [deployments]
+      summary: List deployments for current user
+      responses:
+        "200":
+          description: Deployments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Deployment"
+    post:
+      operationId: createDeployment
+      tags: [deployments]
+      summary: Create a deployment record
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeploymentInput"
+      responses:
+        "201":
+          description: Deployment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+
+  /deployments/{id}:
+    get:
+      operationId: getDeployment
+      tags: [deployments]
+      summary: Get a deployment by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Deployment
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Deployment"
+
+  # ── Concierge Service Requests ───────────────────────────────────────────────
+  /services:
+    get:
+      operationId: listServiceRequests
+      tags: [services]
+      summary: List service requests for the current user
+      responses:
+        "200":
+          description: Service requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceRequest"
+    post:
+      operationId: createServiceRequest
+      tags: [services]
+      summary: Submit a concierge service request
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceRequestInput"
+      responses:
+        "201":
+          description: Service request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+
+  /services/{id}:
+    get:
+      operationId: getServiceRequest
+      tags: [services]
+      summary: Get a service request
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Service request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+
+  # ── Subscriptions ────────────────────────────────────────────────────────────
+  /subscriptions/me:
+    get:
+      operationId: getMySubscription
+      tags: [subscriptions]
+      summary: Get the current user subscription status
+      responses:
+        "200":
+          description: Subscription info
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SubscriptionStatus"
+
+  /subscriptions/checkout:
+    post:
+      operationId: createCheckoutSession
+      tags: [subscriptions]
+      summary: Create a Stripe checkout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckoutSessionInput"
+      responses:
+        "200":
+          description: Checkout URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CheckoutSession"
+
+  /subscriptions/portal:
+    post:
+      operationId: createPortalSession
+      tags: [subscriptions]
+      summary: Create a Stripe customer portal session
+      responses:
+        "200":
+          description: Portal URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalSession"
+
+  # ── Dashboard ────────────────────────────────────────────────────────────────
+  /dashboard/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard overview statistics for the current user
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /dashboard/activity:
+    get:
+      operationId: getDashboardActivity
+      tags: [dashboard]
+      summary: Get recent activity feed for the current user
+      responses:
+        "200":
+          description: Activity items
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  # ── Admin ────────────────────────────────────────────────────────────────────
+  /admin/users:
+    get:
+      operationId: adminListUsers
+      tags: [admin]
+      summary: List all users (admin)
+      responses:
+        "200":
+          description: All users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/AdminUser"
+
+  /admin/repositories:
+    get:
+      operationId: adminListRepositories
+      tags: [admin]
+      summary: List all repositories (admin)
+      responses:
+        "200":
+          description: All repositories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Repository"
+
+  /admin/services:
+    get:
+      operationId: adminListServiceRequests
+      tags: [admin]
+      summary: List all service requests (admin)
+      responses:
+        "200":
+          description: All service requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ServiceRequest"
+
+  /admin/services/{id}:
+    patch:
+      operationId: adminUpdateServiceRequest
+      tags: [admin]
+      summary: Update a service request status (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ServiceRequestUpdate"
+      responses:
+        "200":
+          description: Updated service request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ServiceRequest"
+
+  /admin/stats:
+    get:
+      operationId: getAdminStats
+      tags: [admin]
+      summary: Get platform-wide statistics (admin)
+      responses:
+        "200":
+          description: Admin stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+
 components:
   schemas:
     HealthStatus:
@@ -31,6 +448,351 @@ components:
       properties:
         status:
           type: string
-      required:
-        - status
+      required: [status]
 
+    UserProfile:
+      type: object
+      properties:
+        id:
+          type: integer
+        clerkId:
+          type: string
+        email:
+          type: string
+        name:
+          type: ["string", "null"]
+        avatarUrl:
+          type: ["string", "null"]
+        role:
+          type: string
+          enum: [user, admin]
+        githubConnected:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, clerkId, email, role, githubConnected, createdAt]
+
+    UserProfileUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+        avatarUrl:
+          type: string
+
+    Repository:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        name:
+          type: string
+        fullName:
+          type: string
+        githubUrl:
+          type: string
+        description:
+          type: ["string", "null"]
+        framework:
+          type: ["string", "null"]
+        language:
+          type: ["string", "null"]
+        lastCommitAt:
+          type: ["string", "null"]
+        deploymentStatus:
+          type: string
+          enum: [not_deployed, deploying, deployed, failed]
+        readinessScore:
+          type: ["integer", "null"]
+        isPrivate:
+          type: boolean
+        createdAt:
+          type: string
+      required: [id, userId, name, fullName, githubUrl, deploymentStatus, isPrivate, createdAt]
+
+    RepositoryInput:
+      type: object
+      properties:
+        name:
+          type: string
+        fullName:
+          type: string
+        githubUrl:
+          type: string
+        description:
+          type: string
+        isPrivate:
+          type: boolean
+      required: [name, fullName, githubUrl, isPrivate]
+
+    RepositoryAnalysis:
+      type: object
+      properties:
+        repositoryId:
+          type: integer
+        overallScore:
+          type: integer
+        infrastructureScore:
+          type: integer
+        securityScore:
+          type: integer
+        envVarsScore:
+          type: integer
+        databaseScore:
+          type: integer
+        detectedFrameworks:
+          type: array
+          items:
+            type: string
+        detectedBackend:
+          type: array
+          items:
+            type: string
+        detectedDatabase:
+          type: array
+          items:
+            type: string
+        recommendations:
+          type: array
+          items:
+            $ref: "#/components/schemas/Recommendation"
+        deploymentOptions:
+          type: array
+          items:
+            $ref: "#/components/schemas/DeploymentOption"
+        analyzedAt:
+          type: string
+      required: [repositoryId, overallScore, infrastructureScore, securityScore, envVarsScore, databaseScore, detectedFrameworks, detectedBackend, detectedDatabase, recommendations, deploymentOptions, analyzedAt]
+
+    Recommendation:
+      type: object
+      properties:
+        category:
+          type: string
+        severity:
+          type: string
+          enum: [info, warning, critical]
+        title:
+          type: string
+        description:
+          type: string
+      required: [category, severity, title, description]
+
+    DeploymentOption:
+      type: object
+      properties:
+        provider:
+          type: string
+        type:
+          type: string
+          enum: [cloud, mobile]
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+        estimatedCost:
+          type: string
+        estimatedTime:
+          type: string
+        description:
+          type: string
+      required: [provider, type, difficulty, estimatedCost, estimatedTime, description]
+
+    Deployment:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        repositoryId:
+          type: integer
+        provider:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, succeeded, failed]
+        environment:
+          type: string
+        deployedUrl:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, userId, repositoryId, provider, status, environment, createdAt, updatedAt]
+
+    DeploymentInput:
+      type: object
+      properties:
+        repositoryId:
+          type: integer
+        provider:
+          type: string
+        environment:
+          type: string
+        notes:
+          type: string
+      required: [repositoryId, provider, environment]
+
+    ServiceRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+        userId:
+          type: integer
+        repositoryId:
+          type: ["integer", "null"]
+        serviceType:
+          type: string
+          enum: [deploy_for_me, publish_for_me, cloud_infrastructure, app_store_submission]
+        status:
+          type: string
+          enum: [pending, in_review, in_progress, completed, cancelled]
+        description:
+          type: ["string", "null"]
+        adminNotes:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+      required: [id, userId, serviceType, status, createdAt, updatedAt]
+
+    ServiceRequestInput:
+      type: object
+      properties:
+        repositoryId:
+          type: integer
+        serviceType:
+          type: string
+          enum: [deploy_for_me, publish_for_me, cloud_infrastructure, app_store_submission]
+        description:
+          type: string
+      required: [serviceType]
+
+    ServiceRequestUpdate:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [pending, in_review, in_progress, completed, cancelled]
+        adminNotes:
+          type: string
+
+    SubscriptionStatus:
+      type: object
+      properties:
+        plan:
+          type: string
+          enum: [free, pro, launch_package, apple_package]
+        status:
+          type: string
+          enum: [active, cancelled, expired, none]
+        stripeCustomerId:
+          type: ["string", "null"]
+        currentPeriodEnd:
+          type: ["string", "null"]
+        repositoryLimit:
+          type: ["integer", "null"]
+      required: [plan, status]
+
+    CheckoutSessionInput:
+      type: object
+      properties:
+        priceId:
+          type: string
+        successUrl:
+          type: string
+        cancelUrl:
+          type: string
+      required: [priceId, successUrl, cancelUrl]
+
+    CheckoutSession:
+      type: object
+      properties:
+        url:
+          type: string
+        sessionId:
+          type: string
+      required: [url, sessionId]
+
+    PortalSession:
+      type: object
+      properties:
+        url:
+          type: string
+      required: [url]
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalRepositories:
+          type: integer
+        deployedRepositories:
+          type: integer
+        averageReadinessScore:
+          type: ["integer", "null"]
+        activeServiceRequests:
+          type: integer
+        plan:
+          type: string
+      required: [totalRepositories, deployedRepositories, activeServiceRequests, plan]
+
+    ActivityItem:
+      type: object
+      properties:
+        id:
+          type: integer
+        type:
+          type: string
+          enum: [repository_connected, analysis_completed, deployment_created, service_requested, deployment_succeeded]
+        title:
+          type: string
+        description:
+          type: string
+        createdAt:
+          type: string
+      required: [id, type, title, description, createdAt]
+
+    AdminUser:
+      type: object
+      properties:
+        id:
+          type: integer
+        clerkId:
+          type: string
+        email:
+          type: string
+        name:
+          type: ["string", "null"]
+        role:
+          type: string
+        plan:
+          type: string
+        repositoryCount:
+          type: integer
+        createdAt:
+          type: string
+      required: [id, clerkId, email, role, plan, repositoryCount, createdAt]
+
+    AdminStats:
+      type: object
+      properties:
+        totalUsers:
+          type: integer
+        totalRepositories:
+          type: integer
+        totalDeployments:
+          type: integer
+        totalServiceRequests:
+          type: integer
+        pendingServiceRequests:
+          type: integer
+        proUsers:
+          type: integer
+      required: [totalUsers, totalRepositories, totalDeployments, totalServiceRequests, pendingServiceRequests, proUsers]

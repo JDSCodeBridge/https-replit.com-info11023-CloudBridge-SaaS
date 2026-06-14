@@ -1,0 +1,1 @@
+- [CloudLift Architecture](cloudlift-architecture.md) — Clerk setup, routes, pages, auth patterns for CloudLift SaaS app
