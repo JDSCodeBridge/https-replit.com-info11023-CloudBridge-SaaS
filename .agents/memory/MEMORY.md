@@ -1,1 +1,2 @@
 - [CloudLift Architecture](cloudlift-architecture.md) — Clerk setup, routes, pages, auth patterns for CloudLift SaaS app
+- [Stripe connector credential fields](stripe-connector-fields.md) — Replit Stripe connector returns `secret`/`publishable` not `secret_key`; header is `X-Replit-Token` not `X_REPLIT_TOKEN`

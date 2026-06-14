@@ -15,7 +15,7 @@ async function getStripeCredentials(): Promise<{ secretKey: string }> {
   const resp = await fetch(
     `https://${hostname}/api/v2/connection?include_secrets=true&connector_names=stripe`,
     {
-      headers: { Accept: "application/json", X_REPLIT_TOKEN: xReplitToken },
+      headers: { Accept: "application/json", "X-Replit-Token": xReplitToken },
       signal: AbortSignal.timeout(10_000),
     }
   );
@@ -27,11 +27,11 @@ async function getStripeCredentials(): Promise<{ secretKey: string }> {
   const data = await resp.json();
   const settings = data.items?.[0]?.settings;
 
-  if (!settings?.secret_key) {
+  if (!settings?.secret) {
     throw new Error('Stripe integration not connected. Connect Stripe via the Integrations tab first.');
   }
 
-  return { secretKey: settings.secret_key };
+  return { secretKey: settings.secret };
 }
 
 export async function getUncachableStripeClient(): Promise<Stripe> {
