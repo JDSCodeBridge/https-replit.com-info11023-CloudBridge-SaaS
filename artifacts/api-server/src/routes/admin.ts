@@ -20,13 +20,35 @@ router.get("/users", requireAdmin, async (req, res) => {
         name: u.name,
         role: u.role,
         plan: sub?.plan ?? "free",
+        subscriptionStatus: sub?.status ?? null,
         repositoryCount: repoCount,
+        stripeCustomerId: u.stripeCustomerId ?? null,
         createdAt: u.createdAt.toISOString(),
       };
     }));
     res.json(withStats);
   } catch (err) {
     logger.error({ err }, "GET /admin/users error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/users/:id/role", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { role } = req.body;
+    if (!["user", "admin"].includes(role)) {
+      res.status(400).json({ error: "Invalid role. Must be 'user' or 'admin'." });
+      return;
+    }
+    const [updated] = await db.update(usersTable)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(usersTable.id, id))
+      .returning();
+    if (!updated) { res.status(404).json({ error: "User not found" }); return; }
+    res.json({ id: updated.id, email: updated.email, role: updated.role });
+  } catch (err) {
+    logger.error({ err }, "PATCH /admin/users/:id/role error");
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -55,20 +77,96 @@ router.get("/repositories", requireAdmin, async (req, res) => {
   }
 });
 
+router.get("/subscriptions", requireAdmin, async (req, res) => {
+  try {
+    const subs = await db.select().from(subscriptionsTable).orderBy(sql`${subscriptionsTable.createdAt} DESC`);
+    const withUser = await Promise.all(subs.map(async (s) => {
+      const user = await db.select().from(usersTable).where(eq(usersTable.id, s.userId)).limit(1).then(r => r[0]);
+      return {
+        id: s.id,
+        userId: s.userId,
+        userEmail: user?.email ?? "—",
+        userName: user?.name ?? null,
+        plan: s.plan,
+        status: s.status,
+        stripeSubscriptionId: s.stripeSubscriptionId ?? null,
+        stripePriceId: s.stripePriceId ?? null,
+        currentPeriodEnd: s.currentPeriodEnd?.toISOString() ?? null,
+        createdAt: s.createdAt.toISOString(),
+      };
+    }));
+    res.json(withUser);
+  } catch (err) {
+    logger.error({ err }, "GET /admin/subscriptions error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/deployments", requireAdmin, async (req, res) => {
+  try {
+    const deployments = await db.select().from(deploymentsTable).orderBy(sql`${deploymentsTable.createdAt} DESC`);
+    const withMeta = await Promise.all(deployments.map(async (d) => {
+      const user = await db.select().from(usersTable).where(eq(usersTable.id, d.userId)).limit(1).then(r => r[0]);
+      const repo = d.repositoryId
+        ? await db.select().from(repositoriesTable).where(eq(repositoriesTable.id, d.repositoryId)).limit(1).then(r => r[0])
+        : null;
+      return {
+        id: d.id,
+        userId: d.userId,
+        userEmail: user?.email ?? "—",
+        repositoryId: d.repositoryId,
+        repositoryName: repo?.fullName ?? repo?.name ?? null,
+        provider: d.provider,
+        status: d.status,
+        environment: d.environment,
+        deployedUrl: d.deployedUrl ?? null,
+        notes: d.notes ?? null,
+        createdAt: d.createdAt.toISOString(),
+        updatedAt: d.updatedAt.toISOString(),
+      };
+    }));
+    res.json(withMeta);
+  } catch (err) {
+    logger.error({ err }, "GET /admin/deployments error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.patch("/deployments/:id", requireAdmin, async (req, res) => {
+  try {
+    const id = parseInt(req.params.id);
+    const { status, deployedUrl, notes } = req.body;
+    const [updated] = await db.update(deploymentsTable)
+      .set({ ...(status && { status }), ...(deployedUrl !== undefined && { deployedUrl }), ...(notes !== undefined && { notes }), updatedAt: new Date() })
+      .where(eq(deploymentsTable.id, id))
+      .returning();
+    if (!updated) { res.status(404).json({ error: "Deployment not found" }); return; }
+    res.json({ id: updated.id, status: updated.status, deployedUrl: updated.deployedUrl });
+  } catch (err) {
+    logger.error({ err }, "PATCH /admin/deployments/:id error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
 router.get("/services", requireAdmin, async (req, res) => {
   try {
     const requests = await db.select().from(serviceRequestsTable).orderBy(sql`${serviceRequestsTable.createdAt} DESC`);
-    res.json(requests.map(s => ({
-      id: s.id,
-      userId: s.userId,
-      repositoryId: s.repositoryId,
-      serviceType: s.serviceType,
-      status: s.status,
-      description: s.description,
-      adminNotes: s.adminNotes,
-      createdAt: s.createdAt.toISOString(),
-      updatedAt: s.updatedAt.toISOString(),
-    })));
+    const withUser = await Promise.all(requests.map(async (s) => {
+      const user = await db.select().from(usersTable).where(eq(usersTable.id, s.userId)).limit(1).then(r => r[0]);
+      return {
+        id: s.id,
+        userId: s.userId,
+        userEmail: user?.email ?? "—",
+        repositoryId: s.repositoryId,
+        serviceType: s.serviceType,
+        status: s.status,
+        description: s.description,
+        adminNotes: s.adminNotes,
+        createdAt: s.createdAt.toISOString(),
+        updatedAt: s.updatedAt.toISOString(),
+      };
+    }));
+    res.json(withUser);
   } catch (err) {
     logger.error({ err }, "GET /admin/services error");
     res.status(500).json({ error: "Internal server error" });
@@ -108,10 +206,41 @@ router.get("/stats", requireAdmin, async (req, res) => {
     const totalServiceRequests = await db.select({ count: sql<number>`count(*)` }).from(serviceRequestsTable).then(r => Number(r[0]?.count ?? 0));
     const pendingServiceRequests = await db.select({ count: sql<number>`count(*)` }).from(serviceRequestsTable).where(eq(serviceRequestsTable.status, "pending")).then(r => Number(r[0]?.count ?? 0));
     const proUsers = await db.select({ count: sql<number>`count(*)` }).from(subscriptionsTable).where(eq(subscriptionsTable.plan, "pro")).then(r => Number(r[0]?.count ?? 0));
+    const totalSubscriptions = await db.select({ count: sql<number>`count(*)` }).from(subscriptionsTable).then(r => Number(r[0]?.count ?? 0));
+    const activeSubscriptions = await db.select({ count: sql<number>`count(*)` }).from(subscriptionsTable).where(eq(subscriptionsTable.status, "active")).then(r => Number(r[0]?.count ?? 0));
+    const adminUsers = await db.select({ count: sql<number>`count(*)` }).from(usersTable).where(eq(usersTable.role, "admin")).then(r => Number(r[0]?.count ?? 0));
 
-    res.json({ totalUsers, totalRepositories, totalDeployments, totalServiceRequests, pendingServiceRequests, proUsers });
+    res.json({
+      totalUsers,
+      totalRepositories,
+      totalDeployments,
+      totalServiceRequests,
+      pendingServiceRequests,
+      proUsers,
+      totalSubscriptions,
+      activeSubscriptions,
+      adminUsers,
+    });
   } catch (err) {
     logger.error({ err }, "GET /admin/stats error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+router.get("/system", requireAdmin, async (req, res) => {
+  try {
+    const dbOk = await db.select({ one: sql<number>`1` }).from(usersTable).limit(1).then(() => true).catch(() => false);
+    const envKeys = ["DATABASE_URL", "CLERK_SECRET_KEY", "STRIPE_PRICE_PRO_YEARLY", "STRIPE_PRICE_LAUNCH", "STRIPE_PRICE_APPLE", "REPLIT_DOMAINS"];
+    const envStatus = envKeys.map(k => ({ key: k, present: !!process.env[k] }));
+    res.json({
+      api: { status: "ok", uptime: Math.floor(process.uptime()) },
+      database: { status: dbOk ? "ok" : "error" },
+      environment: envStatus,
+      node: { version: process.version },
+      timestamp: new Date().toISOString(),
+    });
+  } catch (err) {
+    logger.error({ err }, "GET /admin/system error");
     res.status(500).json({ error: "Internal server error" });
   }
 });
