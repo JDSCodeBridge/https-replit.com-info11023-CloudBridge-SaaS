@@ -55,7 +55,7 @@ export default function Pricing() {
           </div>
         </Link>
         <div className="flex gap-4">
-          <Link href="/sign-in"><a className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign In</a></Link>
+          <Link href="/sign-in" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Sign In</Link>
           <Button asChild size="sm" className="bg-primary text-primary-foreground">
             <Link href="/sign-up">Get Started</Link>
           </Button>

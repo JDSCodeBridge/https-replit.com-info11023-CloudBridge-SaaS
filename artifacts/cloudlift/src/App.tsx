@@ -17,6 +17,8 @@ import Launch from "./pages/launch";
 import Settings from "./pages/settings";
 import Admin from "./pages/admin";
 import NotFound from "./pages/not-found";
+import Terms from "./pages/terms";
+import Privacy from "./pages/privacy";
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -144,6 +146,8 @@ function ClerkProviderWithRoutes() {
             <Route path="/settings" component={() => <Protected component={Settings} />} />
             <Route path="/admin" component={() => <Protected component={Admin} />} />
             <Route path="/pricing" component={Pricing} />
+            <Route path="/terms" component={Terms} />
+            <Route path="/privacy" component={Privacy} />
             <Route component={NotFound} />
           </Switch>
           <Toaster />
