@@ -4,9 +4,9 @@ const steps = [
   {
     id: 1,
     label: "Discover",
-    title: "The TurboTax for App Deployment",
-    subtitle: "Built an AI app but don't know how to deploy it?",
-    description: "CloudLift automatically analyzes your repo, fixes environment variables, and launches to production — no DevOps knowledge required.",
+    title: "Build with AI. Launch Anywhere.",
+    subtitle: "Your AI-built app deserves a real production home.",
+    description: "CloudLift analyzes your repo, fixes your config, and ships to AWS, Azure, GCP, or DigitalOcean — without the DevOps headache.",
     visual: <LandingVisual />,
     accent: "#00f0ff",
   },
@@ -82,11 +82,11 @@ function LandingVisual() {
           <span style={{ fontSize: 11, color: "rgba(255,255,255,0.6)" }}>CloudLift AI V2 is now live</span>
         </div>
         <h1 style={{ fontSize: 52, fontWeight: 800, letterSpacing: -2, lineHeight: 1.1, marginBottom: 16, color: "white" }}>
-          The <span style={{ background: "linear-gradient(90deg,#00f0ff,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>TurboTax</span>{" "}
-          for<br />App Deployment.
+          Build with <span style={{ background: "linear-gradient(90deg,#00f0ff,#a78bfa)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}>AI.</span>
+          <br />Launch Anywhere.
         </h1>
         <p style={{ fontSize: 15, color: "rgba(255,255,255,0.5)", maxWidth: 480, lineHeight: 1.6, marginBottom: 28 }}>
-          Built an AI app but don't know how to deploy it? CloudLift automatically analyzes your repo and launches to production.
+          Your AI-built app deserves a real production home. CloudLift analyzes your repo, fixes your config, and ships without the DevOps headache.
         </p>
         <div style={{ display: "flex", gap: 12 }}>
           <div style={{ background: "white", color: "#0a0e1a", padding: "10px 24px", borderRadius: 8, fontWeight: 700, fontSize: 14 }}>Deploy Your First App</div>

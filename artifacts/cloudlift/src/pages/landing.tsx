@@ -1,13 +1,14 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
+import Logo from "@/components/Logo";
 
 export default function Landing() {
   return (
     <div className="min-h-[100dvh] flex flex-col bg-background text-foreground selection:bg-primary/30">
-      <header className="flex items-center justify-between px-8 py-6 border-b border-border/50 backdrop-blur-md sticky top-0 z-50">
-        <div className="bg-white rounded-xl px-3 py-1.5">
-          <img src="/logo.png" alt="CodeLift" className="h-10 w-auto" />
-        </div>
+      <header className="flex items-center justify-between px-8 py-5 border-b border-border/50 backdrop-blur-md sticky top-0 z-50">
+        <Link href="/">
+          <Logo size="lg" />
+        </Link>
         <nav className="hidden md:flex gap-8 text-sm font-medium text-muted-foreground">
           <Link href="#features" className="hover:text-foreground transition-colors">Features</Link>
           <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
@@ -27,7 +28,7 @@ export default function Landing() {
         {/* Hero */}
         <section className="relative flex flex-col items-center text-center px-4 pt-32 pb-40 overflow-hidden">
           <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-primary/10 via-background to-background -z-10" />
-          
+
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary border border-border text-xs font-medium text-muted-foreground mb-8">
             <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
@@ -37,13 +38,14 @@ export default function Landing() {
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter max-w-4xl leading-[1.1] mb-6">
-            The <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">TurboTax</span> for <br/> App Deployment.
+            Build with <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">AI.</span>
+            <br />Launch Anywhere.
           </h1>
-          
+
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed font-light">
-            Built an AI app but don't know how to deploy it? CloudLift automatically analyzes your repo, fixes environment variables, and launches to production with surgical precision.
+            Your AI-built app deserves a real production home. CloudLift analyzes your repo, fixes your config, and ships to AWS, Azure, GCP, or DigitalOcean — without the DevOps headache.
           </p>
-          
+
           <div className="flex gap-4 items-center">
             <Button size="lg" asChild className="text-lg px-8 bg-foreground text-background hover:bg-foreground/90 font-semibold h-14">
               <Link href="/sign-up">Deploy Your First App</Link>
@@ -81,9 +83,7 @@ export default function Landing() {
       <footer className="border-t border-border/40 px-8 py-8 bg-card/10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
-            <div className="bg-white rounded-lg px-2 py-1">
-              <img src="/logo.png" alt="CodeLift" className="h-6 w-auto" />
-            </div>
+            <Logo size="sm" />
             <span className="text-xs text-muted-foreground">© 2026 CloudLift. All rights reserved.</span>
           </div>
           <nav className="flex gap-6 text-xs text-muted-foreground">

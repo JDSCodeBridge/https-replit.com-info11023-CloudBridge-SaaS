@@ -1,13 +1,12 @@
 import { Link } from "wouter";
+import Logo from "@/components/Logo";
 
 export default function Terms() {
   return (
     <div className="min-h-[100dvh] bg-background text-foreground">
       <header className="flex items-center justify-between px-8 py-5 border-b border-border/40 sticky top-0 bg-background/80 backdrop-blur z-10">
         <Link href="/">
-          <div className="bg-white rounded-lg px-2 py-1">
-            <img src="/logo.png" alt="CodeLift" className="h-9 w-auto" />
-          </div>
+          <Logo size="md" />
         </Link>
         <div className="flex gap-4 text-sm text-muted-foreground">
           <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>

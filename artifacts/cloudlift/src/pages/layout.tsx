@@ -1,6 +1,7 @@
 import { useAuth, useUser } from "@clerk/react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import Logo from "@/components/Logo";
 import {
   LayoutDashboard,
   GitBranch,
@@ -30,9 +31,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-[100dvh] flex bg-background">
       <aside className="w-64 border-r border-border/40 bg-card/20 flex flex-col fixed inset-y-0 left-0 z-30">
         <div className="p-5 border-b border-border/40 flex items-center gap-3">
-          <div className="bg-white rounded-lg px-2 py-1">
-            <img src="/logo.png" alt="CodeLift" className="h-9 w-auto" />
-          </div>
+          <Link href="/dashboard">
+            <Logo size="md" />
+          </Link>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">

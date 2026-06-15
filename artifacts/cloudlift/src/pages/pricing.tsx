@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import Logo from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { CheckCircle2, ArrowRight, Loader2 } from "lucide-react";
 import { useUser } from "@clerk/react";
@@ -134,9 +135,7 @@ export default function Pricing() {
     <div className="min-h-[100dvh] bg-background text-foreground flex flex-col">
       <header className="flex items-center justify-between px-8 py-5 border-b border-border/40 sticky top-0 bg-background/80 backdrop-blur z-10">
         <Link href="/">
-          <div className="bg-white rounded-lg px-2 py-1 cursor-pointer">
-            <img src="/logo.png" alt="CloudLift" className="h-9 w-auto" />
-          </div>
+          <Logo size="md" />
         </Link>
         <div className="flex gap-4 items-center">
           {isLoaded && isSignedIn ? (
