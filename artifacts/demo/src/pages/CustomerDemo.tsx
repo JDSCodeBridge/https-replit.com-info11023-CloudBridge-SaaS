@@ -407,11 +407,14 @@ export default function CustomerDemo() {
         background: "rgba(6,9,18,0.9)", backdropFilter: "blur(16px)",
         borderBottom: "1px solid rgba(255,255,255,0.06)",
       }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <div style={{ background: "white", borderRadius: 8, padding: "3px 9px" }}>
-            <span style={{ fontWeight: 800, fontSize: 13, color: "#1a2040" }}>CloudLift</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+          <div style={{
+            background: "white", borderRadius: 10, padding: "7px 16px",
+            boxShadow: "0 0 24px rgba(0,240,255,0.35), 0 2px 8px rgba(0,0,0,0.4)",
+          }}>
+            <span style={{ fontWeight: 800, fontSize: 18, color: "#1a2040", letterSpacing: -0.5 }}>CloudLift</span>
           </div>
-          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)", marginLeft: 4 }}>Customer Journey</span>
+          <span style={{ fontSize: 12, color: "rgba(255,255,255,0.25)" }}>Customer Journey</span>
         </div>
         {/* Step dots */}
         <div style={{ display: "flex", gap: 6 }}>
