@@ -60,12 +60,12 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mb-8">
           <div>
             <h1 className="text-2xl font-bold tracking-tight mb-1">Dashboard</h1>
-            <p className="text-muted-foreground text-sm">
+            <div className="text-muted-foreground text-sm flex items-center gap-1">
               Plan:{" "}
               <Badge variant="outline" className="text-primary border-primary/30 text-[10px] ml-1">
                 {summary?.plan?.toUpperCase() ?? "FREE"}
               </Badge>
-            </p>
+            </div>
           </div>
           <Button asChild className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2">
             <Link href="/repositories">
@@ -92,10 +92,8 @@ export default function Dashboard() {
             <Card className="border-border/40 bg-card/20">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="text-sm font-medium">Repositories</CardTitle>
-                <Link href="/repositories">
-                  <a className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
-                    View all <ArrowRight className="w-3 h-3" />
-                  </a>
+                <Link href="/repositories" className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1 transition-colors">
+                  View all <ArrowRight className="w-3 h-3" />
                 </Link>
               </CardHeader>
               <CardContent>
@@ -116,29 +114,31 @@ export default function Dashboard() {
                 ) : (
                   <div className="space-y-2">
                     {repos?.slice(0, 5).map((repo) => (
-                      <Link key={repo.id} href={`/repositories/${repo.id}`}>
-                        <a className="flex items-center justify-between p-3 rounded-lg border border-border/30 bg-secondary/10 hover:border-border/50 hover:bg-secondary/20 transition-all group">
-                          <div className="min-w-0">
-                            <div className="text-sm font-medium truncate">{repo.fullName}</div>
-                            <div className="flex items-center gap-2 mt-0.5">
-                              {repo.framework && <span className="text-[10px] text-muted-foreground">{repo.framework}</span>}
-                              {repo.readinessScore != null && (
-                                <span className={`text-[10px] font-semibold ${repo.readinessScore >= 80 ? "text-primary" : repo.readinessScore >= 60 ? "text-yellow-400" : "text-destructive"}`}>
-                                  {repo.readinessScore}%
-                                </span>
-                              )}
-                            </div>
+                      <Link
+                        key={repo.id}
+                        href={`/repositories/${repo.id}`}
+                        className="flex items-center justify-between p-3 rounded-lg border border-border/30 bg-secondary/10 hover:border-border/50 hover:bg-secondary/20 transition-all group"
+                      >
+                        <div className="min-w-0">
+                          <div className="text-sm font-medium truncate">{repo.fullName}</div>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            {repo.framework && <span className="text-[10px] text-muted-foreground">{repo.framework}</span>}
+                            {repo.readinessScore != null && (
+                              <span className={`text-[10px] font-semibold ${repo.readinessScore >= 80 ? "text-primary" : repo.readinessScore >= 60 ? "text-yellow-400" : "text-destructive"}`}>
+                                {repo.readinessScore}%
+                              </span>
+                            )}
                           </div>
-                          <div className="flex items-center gap-2 shrink-0">
-                            <Badge
-                              variant="outline"
-                              className={`text-[10px] ${repo.deploymentStatus === "deployed" ? "text-green-400 border-green-400/30" : "border-border/40"}`}
-                            >
-                              {repo.deploymentStatus.replace("_", " ")}
-                            </Badge>
-                            <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                          </div>
-                        </a>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <Badge
+                            variant="outline"
+                            className={`text-[10px] ${repo.deploymentStatus === "deployed" ? "text-green-400 border-green-400/30" : "border-border/40"}`}
+                          >
+                            {repo.deploymentStatus.replace("_", " ")}
+                          </Badge>
+                          <ArrowRight className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
                       </Link>
                     ))}
                   </div>
