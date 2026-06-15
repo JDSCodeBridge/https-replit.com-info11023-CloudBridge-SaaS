@@ -22,6 +22,7 @@ import Admin from "./pages/admin";
 import NotFound from "./pages/not-found";
 import Terms from "./pages/terms";
 import Privacy from "./pages/privacy";
+import SupportChat from "@/components/SupportChat";
 
 const clerkPubKey = publishableKeyFromHost(
   window.location.hostname,
@@ -157,6 +158,7 @@ function ClerkProviderWithRoutes() {
             <Route component={NotFound} />
           </Switch>
           <Toaster />
+          <SupportChat />
         </TooltipProvider>
       </QueryClientProvider>
     </ClerkProvider>

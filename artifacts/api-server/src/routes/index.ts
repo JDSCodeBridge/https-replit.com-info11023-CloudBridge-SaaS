@@ -9,6 +9,7 @@ import dashboardRouter from "./dashboard";
 import adminRouter from "./admin";
 import cloudAccountsRouter from "./cloudAccounts";
 import githubRouter from "./github";
+import chatRouter from "./chat";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use("/dashboard", dashboardRouter);
 router.use("/admin", adminRouter);
 router.use("/cloud-accounts", cloudAccountsRouter);
 router.use("/github", githubRouter);
+router.use("/chat", chatRouter);
 
 export default router;
