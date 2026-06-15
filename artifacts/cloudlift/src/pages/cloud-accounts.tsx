@@ -401,7 +401,7 @@ export default function CloudAccounts() {
   const connected = (Array.isArray(accounts) ? accounts : []).filter(a => a.status === "connected").length;
 
   const accountByProvider = (providerId: string) =>
-    accounts?.find(a => a.provider === providerId);
+    (Array.isArray(accounts) ? accounts : []).find(a => a.provider === providerId);
 
   return (
     <AppLayout>
