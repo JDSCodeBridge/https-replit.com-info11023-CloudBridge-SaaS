@@ -3,6 +3,7 @@ import { getAuth } from "@clerk/express";
 import { db, usersTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { logger } from "../lib/logger";
+import { Email } from "../lib/email";
 
 export async function requireAuth(req: Request, res: Response, next: NextFunction) {
   const { userId } = getAuth(req);
@@ -21,6 +22,7 @@ export async function requireAuth(req: Request, res: Response, next: NextFunctio
         avatarUrl: clerkUser?.imageUrl ?? null,
         role: "user",
       }).returning().then(r => r[0]);
+      Email.sendWelcome(user.email, user.name ?? "");
     }
     (req as any).dbUser = user;
     next();

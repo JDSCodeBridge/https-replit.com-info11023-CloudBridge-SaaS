@@ -3,6 +3,7 @@ import { db, deploymentsTable, repositoriesTable, activityTable, cloudAccountsTa
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import { logger } from "../lib/logger";
+import { Email } from "../lib/email";
 import { decrypt } from "../lib/encryption";
 import { createDOApp, getDOAppStatus, getDODeployLogs } from "../lib/doDeployment";
 
@@ -131,6 +132,7 @@ router.post("/:id/execute", requireAuth, async (req, res) => {
       await db.update(deploymentsTable)
         .set({ status: "failed", notes: result.error, updatedAt: new Date() })
         .where(eq(deploymentsTable.id, id));
+      Email.sendDeploymentUpdate(user.email, repo.name, "failed");
       res.status(422).json({ error: result.error });
       return;
     }
@@ -156,6 +158,10 @@ router.post("/:id/execute", requireAuth, async (req, res) => {
       title: "Deployment launched on DigitalOcean",
       description: `${repo.fullName} — App ID: ${result.appId}`,
     });
+
+    if (result.liveUrl) {
+      Email.sendDeploymentUpdate(user.email, repo.name, "success", result.liveUrl);
+    }
 
     logger.info({ deploymentId: id, doAppId: result.appId, liveUrl: result.liveUrl }, "DO deployment executed");
     res.json(formatDeployment(updated));
@@ -196,6 +202,18 @@ router.post("/:id/sync", requireAuth, async (req, res) => {
       .set({ status: newStatus, deployedUrl: status.liveUrl ?? deployment.deployedUrl, updatedAt: new Date() })
       .where(eq(deploymentsTable.id, id))
       .returning();
+
+    if (newStatus === "deployed" || newStatus === "failed") {
+      const wasAlreadyFinal = deployment.status === "deployed" || deployment.status === "failed";
+      if (!wasAlreadyFinal) {
+        const repo = await db.select().from(repositoriesTable)
+          .where(eq(repositoriesTable.id, deployment.repositoryId))
+          .limit(1).then(r => r[0]);
+        if (repo) {
+          Email.sendDeploymentUpdate(user.email, repo.name, newStatus === "deployed" ? "success" : "failed", updated.deployedUrl ?? null);
+        }
+      }
+    }
 
     if (newStatus === "deployed") {
       await db.update(repositoriesTable)

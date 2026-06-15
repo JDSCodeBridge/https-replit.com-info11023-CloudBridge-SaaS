@@ -1,4 +1,5 @@
 import AppLayout from "./layout";
+import OnboardingWizard from "@/components/OnboardingWizard";
 import {
   useGetDashboardSummary,
   useGetDashboardActivity,
@@ -180,6 +181,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <OnboardingWizard />
     </AppLayout>
   );
 }

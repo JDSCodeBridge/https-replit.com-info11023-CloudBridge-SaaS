@@ -42,29 +42,32 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {navItems.map(({ href, label, icon: Icon }) => {
             const active = location === href || location.startsWith(href + "/");
             return (
-              <Link key={href} href={href}>
-                <a className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all ${
+              <Link
+                key={href}
+                href={href}
+                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all ${
                   active
                     ? "bg-primary/15 text-primary"
                     : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-                }`}>
-                  <Icon className="w-4 h-4 shrink-0" />
-                  {label}
-                </a>
+                }`}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {label}
               </Link>
             );
           })}
 
           {user && (
-            <Link href="/admin">
-              <a className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all mt-4 ${
+            <Link
+              href="/admin"
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all mt-4 ${
                 location === "/admin"
                   ? "bg-primary/15 text-primary"
                   : "text-muted-foreground hover:text-foreground hover:bg-secondary/40"
-              }`}>
-                <Shield className="w-4 h-4 shrink-0" />
-                Admin
-              </a>
+              }`}
+            >
+              <Shield className="w-4 h-4 shrink-0" />
+              Admin
             </Link>
           )}
         </nav>

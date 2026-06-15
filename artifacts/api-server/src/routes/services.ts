@@ -3,6 +3,7 @@ import { db, serviceRequestsTable, activityTable } from "@workspace/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import { logger } from "../lib/logger";
+import { Email } from "../lib/email";
 
 const router = Router();
 
@@ -49,6 +50,15 @@ router.post("/", requireAuth, async (req, res) => {
       title: "Service requested",
       description: `Requested ${serviceType.replace(/_/g, " ")} service`,
     });
+
+    const turnaroundMap: Record<string, string> = {
+      deploy_for_me: "24–48 hours",
+      publish_for_me: "12–24 hours",
+      cloud_infrastructure: "3–5 days",
+      app_store_submission: "5–10 days",
+    };
+    Email.sendServiceRequestConfirmation(user.email, user.name ?? "", serviceType, turnaroundMap[serviceType] ?? "2–5 days");
+    Email.sendServiceRequestAdminAlert(serviceType, user.name ?? "", user.email, description ?? null);
 
     res.status(201).json(formatServiceRequest(request));
   } catch (err) {
