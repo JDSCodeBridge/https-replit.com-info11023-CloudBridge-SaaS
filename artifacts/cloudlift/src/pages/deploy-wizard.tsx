@@ -176,6 +176,7 @@ export default function DeployWizard() {
   const [realDeployedUrl, setRealDeployedUrl] = useState<string | null>(null);
   const [deploymentId, setDeploymentId] = useState<number | null>(null);
   const [deployError, setDeployError] = useState<string>("");
+  const [deployErrorCode, setDeployErrorCode] = useState<string>("");
   const progressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -247,7 +248,10 @@ export default function DeployWizard() {
         });
         const execData = await execRes.json();
         if (!execRes.ok) {
-          if (!cancelled) setDeployError(execData.error ?? "Deployment execution failed. Check your cloud account credentials.");
+          if (!cancelled) {
+            setDeployError(execData.error ?? "Deployment execution failed. Check your cloud account credentials.");
+            setDeployErrorCode(execData.errorCode ?? "generic");
+          }
           return;
         }
 
@@ -670,26 +674,100 @@ export default function DeployWizard() {
       </p>
 
       {deployError ? (
-        <div className="space-y-6">
-          <div className="p-5 rounded-xl border border-destructive/30 bg-destructive/5 text-sm space-y-2">
-            <div className="font-semibold text-destructive">Deployment error</div>
-            <div className="text-muted-foreground leading-relaxed">{deployError}</div>
-          </div>
+        <div className="space-y-5">
+          {deployErrorCode === "github_access" ? (
+            <div className="p-5 rounded-xl border border-yellow-400/30 bg-yellow-400/5 space-y-3">
+              <div className="flex items-start gap-3">
+                <span className="text-xl shrink-0">🔗</span>
+                <div>
+                  <div className="font-semibold text-yellow-300 text-sm mb-1">DigitalOcean needs access to your GitHub</div>
+                  <div className="text-xs text-muted-foreground leading-relaxed">
+                    DigitalOcean can't read your repository yet. You need to install the DigitalOcean GitHub App
+                    on your GitHub account — it's a one-time step that lets DO pull your code to build it.
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-2 text-xs text-muted-foreground pl-8">
+                <div className="flex items-start gap-2">
+                  <span className="shrink-0 font-bold text-yellow-300">1.</span>
+                  Click the button below to open GitHub and install the DigitalOcean App
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="shrink-0 font-bold text-yellow-300">2.</span>
+                  Choose your GitHub account (or the org that owns the repo)
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="shrink-0 font-bold text-yellow-300">3.</span>
+                  Select "All repositories" or pick the specific repo, then click Install
+                </div>
+                <div className="flex items-start gap-2">
+                  <span className="shrink-0 font-bold text-yellow-300">4.</span>
+                  Come back here and click "Try Again"
+                </div>
+              </div>
+              <div className="pl-8">
+                <Button asChild size="sm" className="bg-yellow-500 hover:bg-yellow-400 text-black font-semibold gap-2">
+                  <a href="https://github.com/apps/digitalocean" target="_blank" rel="noopener noreferrer">
+                    <ExternalLink className="w-3.5 h-3.5" /> Install DigitalOcean GitHub App
+                  </a>
+                </Button>
+              </div>
+            </div>
+          ) : deployErrorCode === "invalid_token" ? (
+            <div className="p-5 rounded-xl border border-destructive/30 bg-destructive/5 space-y-2">
+              <div className="font-semibold text-destructive text-sm">Invalid DigitalOcean token</div>
+              <div className="text-xs text-muted-foreground leading-relaxed">
+                Your API token was rejected. It may have expired or been revoked.
+                Go to Cloud Accounts, remove the current token, and paste a new one from your
+                DigitalOcean API settings.
+              </div>
+            </div>
+          ) : (
+            <div className="p-5 rounded-xl border border-destructive/30 bg-destructive/5 space-y-2">
+              <div className="font-semibold text-destructive text-sm">Deployment error</div>
+              <div className="text-xs text-muted-foreground leading-relaxed">{deployError}</div>
+            </div>
+          )}
+
           <div className="flex gap-3 flex-wrap">
-            <Button variant="outline" className="border-border/40" onClick={() => {
-              setDeployError("");
-              setSimulationDone(false);
-              setRealDeployedUrl(null);
-              setDeploymentId(null);
-              setProgressIdx(-1);
-              setCompletedSteps([]);
-              setStep("summary");
-            }}>
+            <Button
+              variant="outline"
+              className="border-border/40"
+              onClick={() => {
+                setDeployError("");
+                setDeployErrorCode("");
+                setSimulationDone(false);
+                setRealDeployedUrl(null);
+                setDeploymentId(null);
+                setProgressIdx(-1);
+                setCompletedSteps([]);
+                setStep("summary");
+              }}
+            >
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to Summary
             </Button>
-            <Button variant="outline" className="border-border/40" onClick={() => navigate("/cloud-accounts")}>
-              Check Cloud Accounts
-            </Button>
+            {deployErrorCode === "github_access" && (
+              <Button
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+                onClick={() => {
+                  setDeployError("");
+                  setDeployErrorCode("");
+                  setSimulationDone(false);
+                  setRealDeployedUrl(null);
+                  setDeploymentId(null);
+                  setProgressIdx(-1);
+                  setCompletedSteps([]);
+                  setStep("progress");
+                }}
+              >
+                Try Again
+              </Button>
+            )}
+            {(deployErrorCode === "invalid_token") && (
+              <Button variant="outline" className="border-border/40" onClick={() => navigate("/cloud-accounts")}>
+                Update Cloud Account
+              </Button>
+            )}
           </div>
         </div>
       ) : (

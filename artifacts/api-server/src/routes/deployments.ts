@@ -170,7 +170,7 @@ router.post("/:id/execute", requireAuth, async (req, res) => {
         .set({ status: "failed", notes: result.error, updatedAt: new Date() })
         .where(eq(deploymentsTable.id, id));
       Email.sendDeploymentUpdate(user.email, repo.name, "failed");
-      res.status(422).json({ error: result.error });
+      res.status(422).json({ error: result.error, errorCode: result.errorCode ?? "generic" });
       return;
     }
 

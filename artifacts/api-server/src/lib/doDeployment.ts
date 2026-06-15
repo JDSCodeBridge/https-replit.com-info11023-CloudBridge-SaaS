@@ -17,6 +17,15 @@ export interface DODeployResult {
   deployId?: string;
   liveUrl?: string;
   error?: string;
+  errorCode?: "github_access" | "invalid_token" | "quota_exceeded" | "generic";
+}
+
+function classifyDOError(msg: string): DODeployResult["errorCode"] {
+  const m = msg.toLowerCase();
+  if (m.includes("github") || m.includes("repository") || m.includes("repo") || m.includes("source") || m.includes("could not retrieve")) return "github_access";
+  if (m.includes("unauthorized") || m.includes("invalid token") || m.includes("forbidden") || m.includes("401") || m.includes("403")) return "invalid_token";
+  if (m.includes("quota") || m.includes("limit") || m.includes("exceeded")) return "quota_exceeded";
+  return "generic";
 }
 
 function inferEnvironmentSlug(language: string | null, framework: string | null): string {
@@ -69,7 +78,7 @@ export async function createDOApp(token: string, spec: DOAppSpec): Promise<DODep
     if (!res.ok) {
       const msg = data?.message ?? data?.error ?? `DigitalOcean API error: HTTP ${res.status}`;
       logger.warn({ status: res.status, msg }, "DO App creation failed");
-      return { ok: false, error: msg };
+      return { ok: false, error: msg, errorCode: classifyDOError(msg) };
     }
 
     const app = data.app;
