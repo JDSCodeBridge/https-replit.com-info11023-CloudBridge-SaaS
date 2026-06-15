@@ -238,11 +238,10 @@ export default function Launch() {
 
   const handleLaunch = () => {
     if (!selectedRepoId || !selectedProvider) return;
-    const provider = cloudProviders.find((p) => p.id === selectedProvider);
-    if (provider?.hasWizard) {
+    if (selectedProvider === "digitalocean") {
       navigate(`/repositories/${selectedRepoId}/deploy`);
     } else {
-      navigate(`/repositories/${selectedRepoId}/deploy`);
+      navigate(`/repositories/${selectedRepoId}/guided-deploy?provider=${selectedProvider}`);
     }
   };
 
@@ -264,14 +263,14 @@ export default function Launch() {
             </div>
             <h2 className="font-semibold text-sm">Which app do you want to deploy?</h2>
           </div>
-          {repos?.length === 0 ? (
+          {(Array.isArray(repos) ? repos : []).length === 0 ? (
             <div className="p-4 rounded-xl border border-yellow-400/20 bg-yellow-400/5 text-sm text-yellow-300 flex items-center gap-2">
               <Zap className="w-4 h-4 shrink-0" />
               Connect a GitHub repository first before launching.
             </div>
           ) : (
             <RepoSelector
-              repos={repos ?? []}
+              repos={Array.isArray(repos) ? repos : []}
               selectedId={selectedRepoId}
               onSelect={setSelectedRepoId}
             />
@@ -345,7 +344,7 @@ export default function Launch() {
                 {chosenProvider && <span className="text-primary"> on {chosenProvider.name}</span>}
               </div>
               <div className="text-xs text-muted-foreground truncate">
-                {repos?.find((r) => r.id === selectedRepoId)?.fullName ?? ""}
+                {(Array.isArray(repos) ? repos : []).find((r) => r.id === selectedRepoId)?.fullName ?? ""}
                 {chosenProvider && ` · ${chosenProvider.cost} · ${chosenProvider.time}`}
               </div>
             </div>

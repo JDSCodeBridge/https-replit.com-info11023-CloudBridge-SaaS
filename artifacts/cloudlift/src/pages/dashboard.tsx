@@ -104,7 +104,7 @@ export default function Dashboard() {
                       <div key={i} className="h-14 rounded-lg bg-secondary/30 animate-pulse" />
                     ))}
                   </div>
-                ) : repos?.length === 0 ? (
+                ) : (Array.isArray(repos) ? repos : []).length === 0 ? (
                   <div className="py-8 text-center">
                     <GitBranch className="w-8 h-8 text-muted-foreground mx-auto mb-3" />
                     <p className="text-sm text-muted-foreground mb-3">No repositories connected yet.</p>
@@ -114,7 +114,7 @@ export default function Dashboard() {
                   </div>
                 ) : (
                   <div className="space-y-2">
-                    {repos?.slice(0, 5).map((repo) => (
+                    {(Array.isArray(repos) ? repos : []).slice(0, 5).map((repo) => (
                       <Link
                         key={repo.id}
                         href={`/repositories/${repo.id}`}

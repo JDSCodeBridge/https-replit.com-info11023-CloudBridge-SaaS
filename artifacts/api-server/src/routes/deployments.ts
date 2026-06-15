@@ -4,6 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import { logger } from "../lib/logger";
 import { Email } from "../lib/email";
+import { generateDockerfile, generateGitHubActions, getGitHubSecretsRequired } from "../lib/configGenerator";
 import { decrypt } from "../lib/encryption";
 import { createDOApp, getDOAppStatus, getDODeployLogs } from "../lib/doDeployment";
 
@@ -91,7 +92,43 @@ router.post("/:id/execute", requireAuth, async (req, res) => {
     if (!deployment) { res.status(404).json({ error: "Deployment not found" }); return; }
 
     if (deployment.provider !== "digitalocean") {
-      res.status(400).json({ error: `Automated execution only available for DigitalOcean. Provider '${deployment.provider}' requires manual setup.` });
+      const repo = await db.select().from(repositoriesTable)
+        .where(eq(repositoriesTable.id, deployment.repositoryId))
+        .limit(1).then(r => r[0]);
+      if (!repo) { res.status(404).json({ error: "Repository not found" }); return; }
+
+      const provider = deployment.provider as "aws" | "gcp" | "azure";
+      const dockerfile = generateDockerfile(repo.language, repo.framework);
+      const workflowYaml = generateGitHubActions(provider, repo.name);
+      const secrets = getGitHubSecretsRequired(provider);
+
+      await db.update(deploymentsTable)
+        .set({ status: "deploying", notes: `Guided ${provider.toUpperCase()} deployment — config generated`, updatedAt: new Date() })
+        .where(eq(deploymentsTable.id, id));
+
+      await db.insert(activityTable).values({
+        userId: user.id,
+        type: "deployment_created",
+        title: `${provider.toUpperCase()} deployment configured`,
+        description: `GitHub Actions + Dockerfile generated for ${repo.name}`,
+      });
+
+      logger.info({ deploymentId: id, provider }, "Guided deployment config generated");
+      res.json({
+        ...formatDeployment({ ...deployment, status: "deploying" }),
+        guidedDeploy: {
+          dockerfile,
+          workflowYaml,
+          workflowPath: `.github/workflows/deploy-${provider}.yml`,
+          secrets,
+          steps: [
+            `Add the generated Dockerfile to the root of your repository`,
+            `Create ${`.github/workflows/deploy-${provider}.yml`} with the generated workflow`,
+            `Add the required GitHub Secrets in your repo → Settings → Secrets and variables → Actions`,
+            `Push to main — GitHub Actions will build and deploy automatically`,
+          ],
+        },
+      });
       return;
     }
 
@@ -225,6 +262,48 @@ router.post("/:id/sync", requireAuth, async (req, res) => {
   } catch (err) {
     logger.error({ err }, "POST /deployments/:id/sync error");
     res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Real-time deployment status via SSE
+router.get("/:id/stream", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).dbUser;
+    const id = parseInt(req.params.id);
+
+    const fetchRow = () =>
+      db.select().from(deploymentsTable)
+        .where(and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, user.id)))
+        .limit(1).then(r => r[0]);
+
+    const initial = await fetchRow();
+    if (!initial) { res.status(404).json({ error: "Not found" }); return; }
+
+    res.setHeader("Content-Type", "text/event-stream");
+    res.setHeader("Cache-Control", "no-cache");
+    res.setHeader("Connection", "keep-alive");
+    res.setHeader("X-Accel-Buffering", "no");
+    res.flushHeaders();
+
+    const send = (d: any) => res.write(`data: ${JSON.stringify(formatDeployment(d))}\n\n`);
+    const isTerminal = (s: string) => s === "deployed" || s === "failed" || s === "cancelled";
+
+    send(initial);
+    if (isTerminal(initial.status)) { res.end(); return; }
+
+    const timer = setInterval(async () => {
+      try {
+        const row = await fetchRow();
+        if (!row) { clearInterval(timer); res.end(); return; }
+        send(row);
+        if (isTerminal(row.status)) { clearInterval(timer); res.end(); }
+      } catch { clearInterval(timer); res.end(); }
+    }, 5000);
+
+    req.on("close", () => clearInterval(timer));
+  } catch (err) {
+    logger.error({ err }, "GET /deployments/:id/stream error");
+    if (!res.headersSent) res.status(500).json({ error: "Internal server error" });
   }
 });
 

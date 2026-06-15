@@ -614,6 +614,11 @@ function SystemHealthTab() {
               { label: "API Server", status: sys?.api?.status ?? (isLoading ? "checking" : "—"), detail: `Uptime: ${uptimeStr}` },
               { label: "Database", status: sys?.database?.status ?? (isLoading ? "checking" : "—"), detail: "PostgreSQL" },
               { label: "Node.js", status: "ok", detail: sys?.node?.version ?? "—" },
+              {
+                label: "Email (Resend)",
+                status: isLoading ? "checking" : (Array.isArray(sys?.environment) && sys.environment.find((e: any) => e.key === "RESEND_API_KEY")?.present) ? "ok" : "not configured",
+                detail: (Array.isArray(sys?.environment) && sys?.environment.find((e: any) => e.key === "RESEND_API_KEY")?.present) ? "Transactional emails active" : "Set RESEND_API_KEY to enable emails",
+              },
             ].map(item => (
               <div key={item.label} className="flex items-center justify-between px-4 py-3">
                 <div>

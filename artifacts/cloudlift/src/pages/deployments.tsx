@@ -1,5 +1,6 @@
 import AppLayout from "./layout";
 import { useListDeployments } from "@workspace/api-client-react";
+import { useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
@@ -20,10 +21,20 @@ const statusConfig: Record<string, { label: string; icon: React.ReactNode; class
     icon: <Clock className="w-3.5 h-3.5" />,
     className: "bg-yellow-400/10 text-yellow-400 border-yellow-400/20",
   },
+  deploying: {
+    label: "Deploying",
+    icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
+    className: "bg-primary/10 text-primary border-primary/20",
+  },
   running: {
     label: "Running",
     icon: <Loader2 className="w-3.5 h-3.5 animate-spin" />,
     className: "bg-primary/10 text-primary border-primary/20",
+  },
+  deployed: {
+    label: "Live",
+    icon: <CheckCircle className="w-3.5 h-3.5" />,
+    className: "bg-green-400/10 text-green-400 border-green-400/20",
   },
   success: {
     label: "Live",
@@ -48,8 +59,14 @@ function fmt(date: string | null | undefined) {
 }
 
 export default function Deployments() {
-  const { data: deployments, isLoading } = useListDeployments();
+  const [polling, setPolling] = useState<number | false>(5000);
+  const { data: deployments, isLoading } = useListDeployments({ query: { refetchInterval: polling } } as any);
   const safe = Array.isArray(deployments) ? deployments : [];
+
+  useEffect(() => {
+    const hasActive = safe.some((d: any) => d.status === "deploying" || d.status === "running");
+    setPolling(hasActive ? 5000 : false);
+  }, [safe.map((d: any) => d.status).join(",")]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <AppLayout>

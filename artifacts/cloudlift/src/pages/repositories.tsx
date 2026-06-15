@@ -315,7 +315,7 @@ export default function Repositories() {
             <div className="p-6 space-y-3">
               {[...Array(3)].map((_, i) => <div key={i} className="h-16 rounded-lg bg-secondary/30 animate-pulse" />)}
             </div>
-          ) : repos?.length === 0 ? (
+          ) : (Array.isArray(repos) ? repos : []).length === 0 ? (
             <div className="p-12 text-center">
               <GitBranch className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold mb-2">No repositories yet</h3>
@@ -329,7 +329,7 @@ export default function Repositories() {
             </div>
           ) : (
             <div className="divide-y divide-border/30">
-              {repos?.map((repo) => (
+              {(Array.isArray(repos) ? repos : []).map((repo) => (
                 <div key={repo.id} className="flex items-center justify-between p-4 hover:bg-secondary/10 transition-colors group">
                   <div className="flex items-start gap-3 min-w-0">
                     <div className="mt-0.5 shrink-0">

@@ -178,7 +178,7 @@ export default function DeployWizard() {
   const frameworks = analysis?.detectedFrameworks ?? [];
   const backends = analysis?.detectedBackend ?? [];
   const databases = analysis?.detectedDatabase ?? [];
-  const envCount = analysis?.recommendations?.filter((r: any) => r.title?.toLowerCase().includes("env")).length ?? 0;
+  const envCount = (Array.isArray(analysis?.recommendations) ? analysis.recommendations : []).filter((r: any) => r.title?.toLowerCase().includes("env")).length;
   const stack = [...frameworks, ...backends].slice(0, 3).join(", ") || repo?.framework || "Unknown";
   const hasDatabase = databases.length > 0;
 

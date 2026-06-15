@@ -272,7 +272,7 @@ router.get("/stats", requireAdmin, async (req, res) => {
 router.get("/system", requireAdmin, async (req, res) => {
   try {
     const dbOk = await db.select({ one: sql<number>`1` }).from(usersTable).limit(1).then(() => true).catch(() => false);
-    const envKeys = ["DATABASE_URL", "CLERK_SECRET_KEY", "CLOUD_CREDENTIALS_KEY", "STRIPE_PRICE_PRO_YEARLY", "STRIPE_PRICE_LAUNCH", "STRIPE_PRICE_APPLE", "REPLIT_DOMAINS", "AI_INTEGRATIONS_OPENAI_API_KEY"];
+    const envKeys = ["DATABASE_URL", "CLERK_SECRET_KEY", "CLOUD_CREDENTIALS_KEY", "STRIPE_PRICE_PRO_YEARLY", "STRIPE_PRICE_LAUNCH", "STRIPE_PRICE_APPLE", "REPLIT_DOMAINS", "AI_INTEGRATIONS_OPENAI_API_KEY", "RESEND_API_KEY"];
     const envStatus = envKeys.map(k => ({ key: k, present: !!process.env[k] }));
     res.json({
       api: { status: "ok", uptime: Math.floor(process.uptime()) },

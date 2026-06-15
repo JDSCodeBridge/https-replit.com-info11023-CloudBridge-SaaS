@@ -17,6 +17,7 @@ import Launch from "./pages/launch";
 import Settings from "./pages/settings";
 import CloudAccounts from "./pages/cloud-accounts";
 import DeployWizard from "./pages/deploy-wizard";
+import GuidedDeploy from "./pages/guided-deploy";
 import Deployments from "./pages/deployments";
 import Admin from "./pages/admin";
 import NotFound from "./pages/not-found";
@@ -146,6 +147,7 @@ function ClerkProviderWithRoutes() {
             <Route path="/repositories" component={() => <Protected component={Repositories} />} />
             <Route path="/repositories/:id" component={() => <Protected component={RepositoryDetail} />} />
             <Route path="/repositories/:id/deploy" component={() => <Protected component={DeployWizard} />} />
+            <Route path="/repositories/:id/guided-deploy" component={() => <Protected component={GuidedDeploy} />} />
             <Route path="/deployments" component={() => <Protected component={Deployments} />} />
             <Route path="/services" component={Services} />
             <Route path="/launch" component={() => <Protected component={Launch} />} />

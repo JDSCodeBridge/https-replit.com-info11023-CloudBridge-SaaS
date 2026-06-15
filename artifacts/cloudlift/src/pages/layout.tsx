@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useAuth, useUser } from "@clerk/react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
@@ -12,6 +13,8 @@ import {
   LogOut,
   Cloud,
   Server,
+  Menu,
+  X,
 } from "lucide-react";
 
 const navItems = [
@@ -28,14 +31,51 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const { signOut } = useAuth();
   const { user } = useUser();
   const [location] = useLocation();
+  const [mobileOpen, setMobileOpen] = useState(false);
+
+  const close = () => setMobileOpen(false);
 
   return (
     <div className="min-h-[100dvh] flex bg-background">
-      <aside className="w-64 border-r border-border/40 bg-card/20 flex flex-col fixed inset-y-0 left-0 z-30">
-        <div className="p-5 border-b border-border/40 flex items-center gap-3">
-          <Link href="/dashboard">
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          className="fixed inset-0 z-30 bg-black/60 backdrop-blur-sm md:hidden"
+          onClick={close}
+        />
+      )}
+
+      {/* Mobile top bar */}
+      <header className="fixed top-0 inset-x-0 z-40 flex items-center gap-3 px-4 h-14 border-b border-border/40 bg-background/95 backdrop-blur-md md:hidden">
+        <button
+          onClick={() => setMobileOpen(true)}
+          className="p-1.5 -ml-1 text-muted-foreground hover:text-foreground transition-colors rounded-md hover:bg-secondary/40"
+          aria-label="Open navigation"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+        <Link href="/dashboard" onClick={close}>
+          <Logo size="sm" />
+        </Link>
+      </header>
+
+      {/* Sidebar */}
+      <aside
+        className={`w-64 border-r border-border/40 bg-card/20 flex flex-col fixed inset-y-0 left-0 z-40 transition-transform duration-200 ease-in-out ${
+          mobileOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        }`}
+      >
+        <div className="p-5 border-b border-border/40 flex items-center justify-between gap-2">
+          <Link href="/dashboard" onClick={close}>
             <Logo size="md" />
           </Link>
+          <button
+            onClick={close}
+            className="md:hidden p-1 text-muted-foreground hover:text-foreground transition-colors rounded"
+            aria-label="Close navigation"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto">
@@ -45,6 +85,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               <Link
                 key={href}
                 href={href}
+                onClick={close}
                 className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all ${
                   active
                     ? "bg-primary/15 text-primary"
@@ -60,6 +101,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {user && (
             <Link
               href="/admin"
+              onClick={close}
               className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all mt-4 ${
                 location === "/admin"
                   ? "bg-primary/15 text-primary"
@@ -100,7 +142,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
       </aside>
 
-      <main className="flex-1 ml-64 min-h-[100dvh] overflow-y-auto">
+      {/* Main content */}
+      <main className="flex-1 ml-0 md:ml-64 min-h-[100dvh] overflow-y-auto pt-14 md:pt-0">
         {children}
       </main>
     </div>
