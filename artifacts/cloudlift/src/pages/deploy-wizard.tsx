@@ -172,7 +172,12 @@ export default function DeployWizard() {
   const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [deployedUrl, setDeployedUrl] = useState("");
   const [copied, setCopied] = useState(false);
+  const [simulationDone, setSimulationDone] = useState(false);
+  const [realDeployedUrl, setRealDeployedUrl] = useState<string | null>(null);
+  const [deploymentId, setDeploymentId] = useState<number | null>(null);
+  const [deployError, setDeployError] = useState<string>("");
   const progressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const pollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Derive display info from analysis
   const frameworks = analysis?.detectedFrameworks ?? [];
@@ -182,15 +187,13 @@ export default function DeployWizard() {
   const stack = [...frameworks, ...backends].slice(0, 3).join(", ") || repo?.framework || "Unknown";
   const hasDatabase = databases.length > 0;
 
-  // Run deployment progress simulation
+  // Run deployment progress simulation (UI only — real status comes from API)
   useEffect(() => {
     if (step !== "progress") return;
     let i = 0;
     const runNext = () => {
       if (i >= PROGRESS_STEPS.length) {
-        const slug = repo?.name?.toLowerCase().replace(/[^a-z0-9]/g, "-") ?? "app";
-        setDeployedUrl(`https://${slug}-xyz4r.ondigitalocean.app`);
-        setTimeout(() => setStep("success"), 600);
+        setSimulationDone(true);
         return;
       }
       setProgressIdx(i);
@@ -202,6 +205,90 @@ export default function DeployWizard() {
     };
     runNext();
     return () => { if (progressTimer.current) clearTimeout(progressTimer.current); };
+  }, [step]);
+
+  // Transition to success once simulation AND real API agree
+  useEffect(() => {
+    if (simulationDone && realDeployedUrl) {
+      setDeployedUrl(realDeployedUrl);
+      setStep("success");
+    }
+  }, [simulationDone, realDeployedUrl]);
+
+  // Call real deployment API while progress screen is shown
+  useEffect(() => {
+    if (step !== "progress") return;
+    let cancelled = false;
+
+    const runDeploy = async () => {
+      try {
+        const token = await getToken();
+
+        // 1. Create deployment record
+        const createRes = await fetch(apiUrl("/deployments"), {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ repositoryId: repoId, provider: selectedProvider }),
+        });
+        const createData = await createRes.json();
+        if (!createRes.ok || !createData.id) {
+          if (!cancelled) setDeployError(createData.error ?? "Failed to create deployment record.");
+          return;
+        }
+        const depId: number = createData.id;
+        if (!cancelled) setDeploymentId(depId);
+
+        // 2. Execute deployment against the cloud provider
+        const execToken = await getToken();
+        const execRes = await fetch(apiUrl(`/deployments/${depId}/execute`), {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${execToken}` },
+          body: JSON.stringify({}),
+        });
+        const execData = await execRes.json();
+        if (!execRes.ok) {
+          if (!cancelled) setDeployError(execData.error ?? "Deployment execution failed. Check your cloud account credentials.");
+          return;
+        }
+
+        // If DO returned a live URL immediately, use it
+        if (execData.deployedUrl) {
+          if (!cancelled) setRealDeployedUrl(execData.deployedUrl);
+          return;
+        }
+
+        // 3. Poll sync until deployed / failed (DO builds typically take 2-5 min)
+        const poll = async () => {
+          if (cancelled) return;
+          try {
+            const t = await getToken();
+            const syncRes = await fetch(apiUrl(`/deployments/${depId}/sync`), {
+              method: "POST",
+              headers: { Authorization: `Bearer ${t}` },
+            });
+            const syncData = await syncRes.json();
+            if (syncData.status === "deployed" && syncData.deployedUrl) {
+              if (!cancelled) setRealDeployedUrl(syncData.deployedUrl);
+            } else if (syncData.status === "failed") {
+              if (!cancelled) setDeployError("DigitalOcean reported a build failure. Check your DO dashboard for logs.");
+            } else {
+              pollTimer.current = setTimeout(poll, 15000);
+            }
+          } catch {
+            if (!cancelled) pollTimer.current = setTimeout(poll, 20000);
+          }
+        };
+        pollTimer.current = setTimeout(poll, 20000);
+      } catch (err: any) {
+        if (!cancelled) setDeployError(err.message ?? "Unexpected error during deployment.");
+      }
+    };
+
+    runDeploy();
+    return () => {
+      cancelled = true;
+      if (pollTimer.current) clearTimeout(pollTimer.current);
+    };
   }, [step]);
 
   // Validate DO token against API
@@ -571,46 +658,86 @@ export default function DeployWizard() {
   const renderProgress = () => (
     <div>
       <div className="flex items-center gap-3 mb-2">
-        <Loader2 className="w-6 h-6 text-primary animate-spin" />
-        <h2 className="text-2xl font-bold">Deploying your app…</h2>
+        {deployError ? null : <Loader2 className="w-6 h-6 text-primary animate-spin" />}
+        <h2 className="text-2xl font-bold">
+          {deployError ? "Deployment Failed" : "Deploying your app…"}
+        </h2>
       </div>
       <p className="text-muted-foreground mb-10 text-sm">
-        Sit back — this takes about 3 minutes. Don't close this tab.
+        {deployError
+          ? "Something went wrong. See details below."
+          : "Sit back — this takes about 3 minutes. Don't close this tab."}
       </p>
-      <div className="space-y-3">
-        {PROGRESS_STEPS.map((s, i) => {
-          const done = completedSteps.includes(i);
-          const active = progressIdx === i && !done;
-          return (
-            <div
-              key={i}
-              className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-500 ${
-                done
-                  ? "border-green-400/20 bg-green-400/5"
-                  : active
-                  ? "border-primary/30 bg-primary/5"
-                  : "border-border/20 bg-card/10 opacity-40"
-              }`}
-            >
-              <div className="w-7 h-7 shrink-0 flex items-center justify-center">
-                {done ? (
-                  <CheckCircle2 className="w-6 h-6 text-green-400" />
-                ) : active ? (
-                  <Loader2 className="w-5 h-5 text-primary animate-spin" />
-                ) : (
-                  <div className="w-5 h-5 rounded-full border-2 border-border/40" />
+
+      {deployError ? (
+        <div className="space-y-6">
+          <div className="p-5 rounded-xl border border-destructive/30 bg-destructive/5 text-sm space-y-2">
+            <div className="font-semibold text-destructive">Deployment error</div>
+            <div className="text-muted-foreground leading-relaxed">{deployError}</div>
+          </div>
+          <div className="flex gap-3 flex-wrap">
+            <Button variant="outline" className="border-border/40" onClick={() => {
+              setDeployError("");
+              setSimulationDone(false);
+              setRealDeployedUrl(null);
+              setDeploymentId(null);
+              setProgressIdx(-1);
+              setCompletedSteps([]);
+              setStep("summary");
+            }}>
+              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Summary
+            </Button>
+            <Button variant="outline" className="border-border/40" onClick={() => navigate("/cloud-accounts")}>
+              Check Cloud Accounts
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {PROGRESS_STEPS.map((s, i) => {
+            const done = completedSteps.includes(i);
+            const active = progressIdx === i && !done;
+            return (
+              <div
+                key={i}
+                className={`flex items-center gap-4 p-4 rounded-xl border transition-all duration-500 ${
+                  done
+                    ? "border-green-400/20 bg-green-400/5"
+                    : active
+                    ? "border-primary/30 bg-primary/5"
+                    : "border-border/20 bg-card/10 opacity-40"
+                }`}
+              >
+                <div className="w-7 h-7 shrink-0 flex items-center justify-center">
+                  {done ? (
+                    <CheckCircle2 className="w-6 h-6 text-green-400" />
+                  ) : active ? (
+                    <Loader2 className="w-5 h-5 text-primary animate-spin" />
+                  ) : (
+                    <div className="w-5 h-5 rounded-full border-2 border-border/40" />
+                  )}
+                </div>
+                <span className={`text-sm font-medium ${done ? "text-green-400" : active ? "text-foreground" : "text-muted-foreground"}`}>
+                  {s.label}
+                </span>
+                {done && (
+                  <span className="ml-auto text-xs text-green-400/60">Done</span>
                 )}
               </div>
-              <span className={`text-sm font-medium ${done ? "text-green-400" : active ? "text-foreground" : "text-muted-foreground"}`}>
-                {s.label}
-              </span>
-              {done && (
-                <span className="ml-auto text-xs text-green-400/60">Done</span>
-              )}
+            );
+          })}
+
+          {simulationDone && !realDeployedUrl && (
+            <div className="flex items-center gap-4 p-4 rounded-xl border border-primary/30 bg-primary/5 mt-2">
+              <Loader2 className="w-5 h-5 text-primary animate-spin shrink-0" />
+              <div>
+                <div className="text-sm font-medium">Waiting for DigitalOcean to confirm your app is live…</div>
+                <div className="text-xs text-muted-foreground mt-0.5">DigitalOcean builds can take 2–5 minutes. Checking every 15 seconds.</div>
+              </div>
             </div>
-          );
-        })}
-      </div>
+          )}
+        </div>
+      )}
     </div>
   );
 
