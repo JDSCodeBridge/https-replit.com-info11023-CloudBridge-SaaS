@@ -11,6 +11,7 @@ import cloudAccountsRouter from "./cloudAccounts";
 import githubRouter from "./github";
 import chatRouter from "./chat";
 import replitRouter from "./replit";
+import importRouter from "./import";
 
 const router: IRouter = Router();
 
@@ -26,5 +27,6 @@ router.use("/cloud-accounts", cloudAccountsRouter);
 router.use("/github", githubRouter);
 router.use("/chat", chatRouter);
 router.use("/replit", replitRouter);
+router.use("/import", importRouter);
 
 export default router;
