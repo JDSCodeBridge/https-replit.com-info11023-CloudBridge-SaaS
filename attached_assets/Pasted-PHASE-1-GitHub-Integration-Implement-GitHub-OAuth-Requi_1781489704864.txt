@@ -1,0 +1,224 @@
+PHASE 1 – GitHub Integration
+
+Implement GitHub OAuth.
+
+Requirements:
+
+Connect GitHub account from Settings
+Store GitHub access token securely
+List user repositories
+Import repository metadata
+Allow repository selection
+Save repository to database
+
+Repository page should show:
+
+Repository name
+Language
+Framework detected
+Last commit
+Visibility
+Status
+
+Success criteria:
+
+User clicks Connect GitHub → authenticates → repositories appear.
+
+PHASE 2 – AI Repository Analysis
+
+When a repository is connected:
+
+Clone repository.
+
+Analyze:
+
+package.json
+requirements.txt
+Dockerfile
+environment variables
+framework
+database dependencies
+ports
+deployment readiness
+
+Generate:
+
+Deployment Readiness Score
+
+Detect:
+
+Missing env vars
+Missing Dockerfile
+Missing health checks
+Exposed secrets
+Dependency issues
+
+Store results in database.
+
+Success criteria:
+
+User sees a real analysis report.
+
+PHASE 3 – Cloud Provider Connections
+
+Implement Cloud Accounts page.
+
+Support:
+
+DigitalOcean
+AWS
+Azure
+Google Cloud
+
+Path 1 implementation:
+
+Credential/token based connections.
+
+DigitalOcean:
+
+Personal Access Token
+Validate token
+Save encrypted
+
+AWS:
+
+Access Key
+Secret Key
+Validate IAM access
+
+Azure:
+
+Tenant ID
+Client ID
+Client Secret
+
+Google Cloud:
+
+Service Account JSON
+
+Success criteria:
+
+User can connect provider and pass validation.
+
+PHASE 4 – Deployment Engine
+
+Build real deployment workflows.
+
+DigitalOcean MVP first.
+
+Workflow:
+
+Repository
+→ Analysis
+→ Cloud Account
+→ Deploy
+
+Deploy to:
+
+DigitalOcean App Platform
+
+Steps:
+
+Create application
+Configure environment variables
+Configure build settings
+Deploy
+Capture deployment status
+Capture logs
+Capture URL
+
+Store deployment records.
+
+Success criteria:
+
+User receives a working public URL.
+
+PHASE 5 – Billing
+
+Implement Stripe production billing.
+
+Plans:
+
+Free
+Launch ($149)
+Publish ($99)
+Infrastructure ($299)
+
+Requirements:
+
+Checkout
+Payment success
+Payment failure
+Webhooks
+Customer portal
+Subscription management
+
+Success criteria:
+
+Real payments work.
+
+PHASE 6 – Admin Dashboard
+
+Admin must be able to:
+
+View users
+View repositories
+View deployments
+View cloud connections
+View payments
+View service requests
+
+Provide deployment logs and status.
+
+PHASE 7 – Security
+
+Implement:
+
+Encrypted credential storage
+Protected API routes
+Rate limiting
+Audit logging
+Secure secrets management
+
+No plaintext credentials.
+
+PHASE 8 – Launch Readiness
+
+Before completion:
+
+Perform full QA.
+
+Verify:
+
+✓ GitHub OAuth works
+
+✓ Repository import works
+
+✓ Analysis works
+
+✓ Cloud connections work
+
+✓ DigitalOcean deployment works
+
+✓ Stripe works
+
+✓ Dashboard works
+
+✓ Service requests work
+
+✓ Production build passes
+
+Generate a final Launch Readiness Report.
+
+At the end, provide:
+
+Completed features
+Remaining blockers
+Database schema
+API endpoints
+Deployment architecture
+Production launch checklist
+
+Do not stop until all functionality has been implemented or blockers are identified.
+
+This prompt will push Replit toward building the actual business rather than polishing the UI. Start with GitHub OAuth + repository analysis + DigitalOcean deployment first. If those three work, CloudLift becomes something people can actually pay for.

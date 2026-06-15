@@ -1,8 +1,10 @@
 import { Router } from "express";
-import { db, deploymentsTable, activityTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, deploymentsTable, repositoriesTable, activityTable, cloudAccountsTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
 import { logger } from "../lib/logger";
+import { decrypt } from "../lib/encryption";
+import { createDOApp, getDOAppStatus, getDODeployLogs } from "../lib/doDeployment";
 
 const router = Router();
 
@@ -14,8 +16,10 @@ function formatDeployment(d: any) {
     provider: d.provider,
     status: d.status,
     environment: d.environment,
-    deployedUrl: d.deployedUrl,
-    notes: d.notes,
+    deployedUrl: d.deployedUrl ?? null,
+    notes: d.notes ?? null,
+    doAppId: d.doAppId ?? null,
+    doDeployId: d.doDeployId ?? null,
     createdAt: d.createdAt.toISOString(),
     updatedAt: d.updatedAt.toISOString(),
   };
@@ -61,12 +65,180 @@ router.post("/", requireAuth, async (req, res) => {
 
 router.get("/:id", requireAuth, async (req, res) => {
   try {
+    const user = (req as any).dbUser;
     const id = parseInt(req.params.id);
-    const deployment = await db.select().from(deploymentsTable).where(eq(deploymentsTable.id, id)).limit(1).then(r => r[0]);
+    const deployment = await db.select().from(deploymentsTable)
+      .where(and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, user.id)))
+      .limit(1).then(r => r[0]);
     if (!deployment) { res.status(404).json({ error: "Not found" }); return; }
     res.json(formatDeployment(deployment));
   } catch (err) {
     logger.error({ err }, "GET /deployments/:id error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Phase 3: Execute a real DigitalOcean App Platform deployment
+router.post("/:id/execute", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).dbUser;
+    const id = parseInt(req.params.id);
+
+    const deployment = await db.select().from(deploymentsTable)
+      .where(and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, user.id)))
+      .limit(1).then(r => r[0]);
+    if (!deployment) { res.status(404).json({ error: "Deployment not found" }); return; }
+
+    if (deployment.provider !== "digitalocean") {
+      res.status(400).json({ error: `Automated execution only available for DigitalOcean. Provider '${deployment.provider}' requires manual setup.` });
+      return;
+    }
+
+    const doAccount = await db.select().from(cloudAccountsTable)
+      .where(and(eq(cloudAccountsTable.userId, user.id), eq(cloudAccountsTable.provider, "digitalocean")))
+      .limit(1).then(r => r[0]);
+
+    if (!doAccount || doAccount.status !== "connected") {
+      res.status(400).json({
+        error: "No connected DigitalOcean account found. Add your DO API token in Cloud Accounts first.",
+        requiresCloudAccount: true,
+      });
+      return;
+    }
+
+    const repo = await db.select().from(repositoriesTable)
+      .where(eq(repositoriesTable.id, deployment.repositoryId))
+      .limit(1).then(r => r[0]);
+    if (!repo) { res.status(404).json({ error: "Repository not found" }); return; }
+
+    let creds: any;
+    try { creds = JSON.parse(decrypt(doAccount.credentialsEncrypted)); }
+    catch { res.status(500).json({ error: "Failed to decrypt DigitalOcean credentials" }); return; }
+
+    // Mark as deploying
+    await db.update(deploymentsTable)
+      .set({ status: "deploying", updatedAt: new Date() })
+      .where(eq(deploymentsTable.id, id));
+
+    const result = await createDOApp(creds.token, {
+      name: repo.name,
+      repoFullName: repo.fullName,
+      language: repo.language ?? null,
+      framework: repo.framework ?? null,
+    });
+
+    if (!result.ok) {
+      await db.update(deploymentsTable)
+        .set({ status: "failed", notes: result.error, updatedAt: new Date() })
+        .where(eq(deploymentsTable.id, id));
+      res.status(422).json({ error: result.error });
+      return;
+    }
+
+    const [updated] = await db.update(deploymentsTable)
+      .set({
+        status: result.liveUrl ? "deployed" : "deploying",
+        doAppId: result.appId ?? null,
+        doDeployId: result.deployId ?? null,
+        deployedUrl: result.liveUrl ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(deploymentsTable.id, id))
+      .returning();
+
+    await db.update(repositoriesTable)
+      .set({ deploymentStatus: result.liveUrl ? "deployed" : "deploying", updatedAt: new Date() })
+      .where(eq(repositoriesTable.id, repo.id));
+
+    await db.insert(activityTable).values({
+      userId: user.id,
+      type: "deployment_created",
+      title: "Deployment launched on DigitalOcean",
+      description: `${repo.fullName} — App ID: ${result.appId}`,
+    });
+
+    logger.info({ deploymentId: id, doAppId: result.appId, liveUrl: result.liveUrl }, "DO deployment executed");
+    res.json(formatDeployment(updated));
+  } catch (err) {
+    logger.error({ err }, "POST /deployments/:id/execute error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Phase 3: Sync deployment status from DigitalOcean
+router.post("/:id/sync", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).dbUser;
+    const id = parseInt(req.params.id);
+
+    const deployment = await db.select().from(deploymentsTable)
+      .where(and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, user.id)))
+      .limit(1).then(r => r[0]);
+    if (!deployment) { res.status(404).json({ error: "Not found" }); return; }
+    if (!deployment.doAppId) { res.status(400).json({ error: "No DO app ID — has this been executed?" }); return; }
+
+    const doAccount = await db.select().from(cloudAccountsTable)
+      .where(and(eq(cloudAccountsTable.userId, user.id), eq(cloudAccountsTable.provider, "digitalocean")))
+      .limit(1).then(r => r[0]);
+    if (!doAccount) { res.status(400).json({ error: "No DigitalOcean account found" }); return; }
+
+    let creds: any;
+    try { creds = JSON.parse(decrypt(doAccount.credentialsEncrypted)); }
+    catch { res.status(500).json({ error: "Failed to decrypt credentials" }); return; }
+
+    const status = await getDOAppStatus(creds.token, deployment.doAppId);
+    if (!status.ok) { res.status(500).json({ error: status.error }); return; }
+
+    const phase = status.phase ?? "UNKNOWN";
+    const newStatus = phase === "ACTIVE" ? "deployed" : (phase === "ERROR" || phase === "FAILED") ? "failed" : "deploying";
+
+    const [updated] = await db.update(deploymentsTable)
+      .set({ status: newStatus, deployedUrl: status.liveUrl ?? deployment.deployedUrl, updatedAt: new Date() })
+      .where(eq(deploymentsTable.id, id))
+      .returning();
+
+    if (newStatus === "deployed") {
+      await db.update(repositoriesTable)
+        .set({ deploymentStatus: "deployed", updatedAt: new Date() })
+        .where(eq(repositoriesTable.id, deployment.repositoryId));
+    }
+
+    res.json({ ...formatDeployment(updated), doPhase: phase });
+  } catch (err) {
+    logger.error({ err }, "POST /deployments/:id/sync error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Phase 3: Fetch real build logs from DigitalOcean
+router.get("/:id/logs", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).dbUser;
+    const id = parseInt(req.params.id);
+
+    const deployment = await db.select().from(deploymentsTable)
+      .where(and(eq(deploymentsTable.id, id), eq(deploymentsTable.userId, user.id)))
+      .limit(1).then(r => r[0]);
+    if (!deployment) { res.status(404).json({ error: "Not found" }); return; }
+
+    if (!deployment.doAppId || !deployment.doDeployId) {
+      res.json({ logs: "No deployment has been executed yet.", source: "none" });
+      return;
+    }
+
+    const doAccount = await db.select().from(cloudAccountsTable)
+      .where(and(eq(cloudAccountsTable.userId, user.id), eq(cloudAccountsTable.provider, "digitalocean")))
+      .limit(1).then(r => r[0]);
+    if (!doAccount) { res.json({ logs: "No DigitalOcean account found.", source: "error" }); return; }
+
+    let creds: any;
+    try { creds = JSON.parse(decrypt(doAccount.credentialsEncrypted)); }
+    catch { res.json({ logs: "Failed to decrypt credentials.", source: "error" }); return; }
+
+    const logs = await getDODeployLogs(creds.token, deployment.doAppId, deployment.doDeployId);
+    res.json({ logs, source: "digitalocean" });
+  } catch (err) {
+    logger.error({ err }, "GET /deployments/:id/logs error");
     res.status(500).json({ error: "Internal server error" });
   }
 });

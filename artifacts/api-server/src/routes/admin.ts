@@ -1,6 +1,6 @@
 import { Router } from "express";
-import { db, usersTable, repositoriesTable, serviceRequestsTable, deploymentsTable, subscriptionsTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, usersTable, repositoriesTable, serviceRequestsTable, deploymentsTable, subscriptionsTable, cloudAccountsTable, auditLogsTable } from "@workspace/db";
+import { eq, desc } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { requireAdmin } from "../middlewares/requireAuth";
 import { logger } from "../lib/logger";
@@ -22,6 +22,8 @@ router.get("/users", requireAdmin, async (req, res) => {
         plan: sub?.plan ?? "free",
         subscriptionStatus: sub?.status ?? null,
         repositoryCount: repoCount,
+        githubConnected: u.githubConnected,
+        githubUsername: u.githubUsername ?? null,
         stripeCustomerId: u.stripeCustomerId ?? null,
         createdAt: u.createdAt.toISOString(),
       };
@@ -121,6 +123,8 @@ router.get("/deployments", requireAdmin, async (req, res) => {
         environment: d.environment,
         deployedUrl: d.deployedUrl ?? null,
         notes: d.notes ?? null,
+        doAppId: d.doAppId ?? null,
+        doDeployId: d.doDeployId ?? null,
         createdAt: d.createdAt.toISOString(),
         updatedAt: d.updatedAt.toISOString(),
       };
@@ -181,19 +185,61 @@ router.patch("/services/:id", requireAdmin, async (req, res) => {
       .set({ status, adminNotes, updatedAt: new Date() })
       .where(eq(serviceRequestsTable.id, id))
       .returning();
-    res.json({
-      id: updated.id,
-      userId: updated.userId,
-      repositoryId: updated.repositoryId,
-      serviceType: updated.serviceType,
-      status: updated.status,
-      description: updated.description,
-      adminNotes: updated.adminNotes,
-      createdAt: updated.createdAt.toISOString(),
-      updatedAt: updated.updatedAt.toISOString(),
-    });
+    res.json({ id: updated.id, status: updated.status, adminNotes: updated.adminNotes });
   } catch (err) {
     logger.error({ err }, "PATCH /admin/services/:id error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Phase 6: Cloud accounts visibility for admin
+router.get("/cloud-accounts", requireAdmin, async (req, res) => {
+  try {
+    const accounts = await db.select().from(cloudAccountsTable).orderBy(sql`${cloudAccountsTable.createdAt} DESC`);
+    const withUser = await Promise.all(accounts.map(async (a) => {
+      const user = await db.select().from(usersTable).where(eq(usersTable.id, a.userId)).limit(1).then(r => r[0]);
+      return {
+        id: a.id,
+        userId: a.userId,
+        userEmail: user?.email ?? "—",
+        provider: a.provider,
+        status: a.status,
+        accountLabel: a.accountLabel,
+        lastValidatedAt: a.lastValidatedAt?.toISOString() ?? null,
+        validationError: a.validationError,
+        createdAt: a.createdAt.toISOString(),
+      };
+    }));
+    res.json(withUser);
+  } catch (err) {
+    logger.error({ err }, "GET /admin/cloud-accounts error");
+    res.status(500).json({ error: "Internal server error" });
+  }
+});
+
+// Phase 5: Audit log view for admin
+router.get("/audit-logs", requireAdmin, async (req, res) => {
+  try {
+    const limit = Math.min(parseInt(req.query.limit as string || "100"), 500);
+    const logs = await db.select().from(auditLogsTable)
+      .orderBy(desc(auditLogsTable.createdAt))
+      .limit(limit);
+    const withUser = await Promise.all(logs.map(async (l) => {
+      const user = l.userId ? await db.select().from(usersTable).where(eq(usersTable.id, l.userId)).limit(1).then(r => r[0]) : null;
+      return {
+        id: l.id,
+        userId: l.userId,
+        userEmail: user?.email ?? null,
+        action: l.action,
+        resourceType: l.resourceType,
+        resourceId: l.resourceId,
+        ipAddress: l.ipAddress,
+        createdAt: l.createdAt.toISOString(),
+      };
+    }));
+    res.json(withUser);
+  } catch (err) {
+    logger.error({ err }, "GET /admin/audit-logs error");
     res.status(500).json({ error: "Internal server error" });
   }
 });
@@ -209,17 +255,13 @@ router.get("/stats", requireAdmin, async (req, res) => {
     const totalSubscriptions = await db.select({ count: sql<number>`count(*)` }).from(subscriptionsTable).then(r => Number(r[0]?.count ?? 0));
     const activeSubscriptions = await db.select({ count: sql<number>`count(*)` }).from(subscriptionsTable).where(eq(subscriptionsTable.status, "active")).then(r => Number(r[0]?.count ?? 0));
     const adminUsers = await db.select({ count: sql<number>`count(*)` }).from(usersTable).where(eq(usersTable.role, "admin")).then(r => Number(r[0]?.count ?? 0));
+    const githubConnected = await db.select({ count: sql<number>`count(*)` }).from(usersTable).where(eq(usersTable.githubConnected, true)).then(r => Number(r[0]?.count ?? 0));
+    const cloudAccounts = await db.select({ count: sql<number>`count(*)` }).from(cloudAccountsTable).where(eq(cloudAccountsTable.status, "connected")).then(r => Number(r[0]?.count ?? 0));
 
     res.json({
-      totalUsers,
-      totalRepositories,
-      totalDeployments,
-      totalServiceRequests,
-      pendingServiceRequests,
-      proUsers,
-      totalSubscriptions,
-      activeSubscriptions,
-      adminUsers,
+      totalUsers, totalRepositories, totalDeployments, totalServiceRequests,
+      pendingServiceRequests, proUsers, totalSubscriptions, activeSubscriptions,
+      adminUsers, githubConnected, cloudAccounts,
     });
   } catch (err) {
     logger.error({ err }, "GET /admin/stats error");
@@ -230,7 +272,7 @@ router.get("/stats", requireAdmin, async (req, res) => {
 router.get("/system", requireAdmin, async (req, res) => {
   try {
     const dbOk = await db.select({ one: sql<number>`1` }).from(usersTable).limit(1).then(() => true).catch(() => false);
-    const envKeys = ["DATABASE_URL", "CLERK_SECRET_KEY", "STRIPE_PRICE_PRO_YEARLY", "STRIPE_PRICE_LAUNCH", "STRIPE_PRICE_APPLE", "REPLIT_DOMAINS"];
+    const envKeys = ["DATABASE_URL", "CLERK_SECRET_KEY", "CLOUD_CREDENTIALS_KEY", "STRIPE_PRICE_PRO_YEARLY", "STRIPE_PRICE_LAUNCH", "STRIPE_PRICE_APPLE", "REPLIT_DOMAINS", "AI_INTEGRATIONS_OPENAI_API_KEY"];
     const envStatus = envKeys.map(k => ({ key: k, present: !!process.env[k] }));
     res.json({
       api: { status: "ok", uptime: Math.floor(process.uptime()) },

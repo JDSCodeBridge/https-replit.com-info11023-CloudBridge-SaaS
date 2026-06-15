@@ -398,7 +398,7 @@ function ProviderCard({
 export default function CloudAccounts() {
   const { data: accounts, isLoading } = useCloudAccounts();
 
-  const connected = (accounts ?? []).filter(a => a.status === "connected").length;
+  const connected = (Array.isArray(accounts) ? accounts : []).filter(a => a.status === "connected").length;
 
   const accountByProvider = (providerId: string) =>
     accounts?.find(a => a.provider === providerId);

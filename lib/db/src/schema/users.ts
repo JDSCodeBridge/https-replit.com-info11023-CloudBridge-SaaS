@@ -10,6 +10,8 @@ export const usersTable = pgTable("users", {
   avatarUrl: text("avatar_url"),
   role: text("role").notNull().default("user"),
   githubConnected: boolean("github_connected").notNull().default(false),
+  githubUsername: text("github_username"),
+  githubAccessToken: text("github_access_token"),
   stripeCustomerId: text("stripe_customer_id"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),

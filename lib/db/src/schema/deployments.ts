@@ -13,6 +13,9 @@ export const deploymentsTable = pgTable("deployments", {
   environment: text("environment").notNull().default("production"),
   deployedUrl: text("deployed_url"),
   notes: text("notes"),
+  doAppId: text("do_app_id"),
+  doDeployId: text("do_deploy_id"),
+  deployLogs: text("deploy_logs"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

@@ -216,7 +216,7 @@ function OverviewTab() {
             <span className="text-sm font-medium">Recent Users</span>
           </div>
           <div className="divide-y divide-border/20">
-            {users?.slice(0, 6).map(u => (
+            {(Array.isArray(users) ? users : []).slice(0, 6).map(u => (
               <div key={u.id} className="flex items-center justify-between px-4 py-3 hover:bg-secondary/10">
                 <div>
                   <div className="text-sm font-medium">{u.email}</div>
@@ -228,7 +228,7 @@ function OverviewTab() {
                 </div>
               </div>
             ))}
-            {!users?.length && <div className="px-4 py-6 text-center text-sm text-muted-foreground">No users yet</div>}
+            {!(Array.isArray(users) ? users : []).length && <div className="px-4 py-6 text-center text-sm text-muted-foreground">No users yet</div>}
           </div>
         </div>
 
@@ -238,7 +238,7 @@ function OverviewTab() {
             <span className="text-sm font-medium">Pending Service Requests</span>
           </div>
           <div className="divide-y divide-border/20">
-            {services?.filter(s => s.status === "pending").slice(0, 6).map(s => (
+            {(Array.isArray(services) ? services : []).filter(s => s.status === "pending").slice(0, 6).map(s => (
               <div key={s.id} className="flex items-center justify-between px-4 py-3 hover:bg-secondary/10">
                 <div>
                   <div className="text-sm font-medium">{s.serviceType.replace(/_/g, " ")}</div>
@@ -247,7 +247,7 @@ function OverviewTab() {
                 <StatusBadge value={s.status} />
               </div>
             ))}
-            {!services?.filter(s => s.status === "pending").length && (
+            {!(Array.isArray(services) ? services : []).filter(s => s.status === "pending").length && (
               <div className="px-4 py-6 text-center text-sm text-muted-foreground">No pending requests 🎉</div>
             )}
           </div>

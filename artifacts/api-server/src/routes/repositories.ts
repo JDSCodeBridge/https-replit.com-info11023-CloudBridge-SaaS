@@ -1,8 +1,12 @@
 import { Router } from "express";
-import { db, repositoriesTable, repositoryAnalysesTable, activityTable } from "@workspace/db";
+import { db, repositoriesTable, repositoryAnalysesTable, activityTable, usersTable } from "@workspace/db";
 import { eq, and } from "drizzle-orm";
 import { requireAuth } from "../middlewares/requireAuth";
+import { requireRepoSlot } from "../middlewares/planGate";
+import { analysisRateLimit } from "../middlewares/rateLimiter";
 import { logger } from "../lib/logger";
+import { GithubClient } from "../lib/githubClient";
+import { decrypt } from "../lib/encryption";
 import OpenAI from "openai";
 
 const router = Router();
@@ -41,7 +45,8 @@ router.get("/", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/", requireAuth, async (req, res) => {
+// Phase 4: plan gate on POST
+router.post("/", requireAuth, requireRepoSlot, async (req, res) => {
   try {
     const user = (req as any).dbUser;
     const { name, fullName, githubUrl, description, isPrivate } = req.body;
@@ -96,7 +101,8 @@ router.delete("/:id", requireAuth, async (req, res) => {
   }
 });
 
-router.post("/:id/analyze", requireAuth, async (req, res) => {
+// Phase 2: real AI analysis reading actual GitHub repo files
+router.post("/:id/analyze", requireAuth, analysisRateLimit, async (req, res) => {
   try {
     const user = (req as any).dbUser;
     const id = parseInt(req.params.id);
@@ -107,101 +113,73 @@ router.post("/:id/analyze", requireAuth, async (req, res) => {
 
     logger.info({ repoId: id, fullName: repo.fullName }, "Starting AI analysis");
 
+    // Fetch real files from GitHub if token available
+    let repoFileContext = "";
+    const freshUser = await db.select().from(usersTable).where(eq(usersTable.id, user.id)).limit(1).then(r => r[0]);
+    if (freshUser?.githubConnected && freshUser.githubAccessToken) {
+      try {
+        const token = decrypt(freshUser.githubAccessToken);
+        const client = new GithubClient(token);
+        const files = await client.fetchRepoFiles(repo.fullName);
+        if (Object.keys(files).length > 0) {
+          const fileLines = Object.entries(files)
+            .map(([name, content]) => `\n### ${name}\n\`\`\`\n${content.slice(0, 2000)}\n\`\`\``)
+            .join("\n");
+          repoFileContext = `\n\nACTUAL REPOSITORY FILES (use these for precise analysis):\n${fileLines}`;
+          logger.info({ repoId: id, fileCount: Object.keys(files).length }, "Fetched real repo files for analysis");
+        }
+      } catch (fileErr) {
+        logger.warn({ fileErr }, "Could not fetch repo files, falling back to metadata analysis");
+      }
+    }
+
     const prompt = `You are a cloud deployment readiness expert. Analyze this GitHub repository and provide a realistic deployment readiness assessment.
 
 Repository: ${repo.fullName}
 Description: ${repo.description || "No description provided"}
 Primary Language: ${repo.language || "Unknown"}
-GitHub URL: ${repo.githubUrl}
+GitHub URL: ${repo.githubUrl}${repoFileContext}
 
-Assess based on typical patterns for this type of project. Be realistic — most projects score 50-80, not 100.
+${repoFileContext ? "Use the actual file contents above for a precise, file-specific analysis." : "Assess based on typical patterns for this type of project."}
+Be realistic — most projects score 50-80, not 100.
 
-Respond with ONLY a valid JSON object (no markdown, no code blocks) with this exact structure:
+Respond with ONLY a valid JSON object (no markdown, no code blocks):
 {
   "overallScore": <integer 0-100>,
   "infrastructureScore": <integer 0-100>,
   "securityScore": <integer 0-100>,
   "envVarsScore": <integer 0-100>,
   "databaseScore": <integer 0-100>,
-  "detectedFrameworks": ["framework names based on language/description"],
-  "detectedBackend": ["backend technologies"],
-  "detectedDatabase": ["likely databases"],
+  "detectedFrameworks": ["framework names"],
+  "detectedBackend": ["backend tech"],
+  "detectedDatabase": ["databases"],
   "recommendations": [
-    {
-      "category": "Security",
-      "severity": "critical",
-      "title": "Set environment variables securely",
-      "description": "Ensure API keys and secrets are stored in environment variables, not hardcoded in source code."
-    },
-    {
-      "category": "Infrastructure",
-      "severity": "warning",
-      "title": "Add a health check endpoint",
-      "description": "A /health or /healthz endpoint allows load balancers and orchestrators to verify availability."
-    },
-    {
-      "category": "Environment",
-      "severity": "info",
-      "title": "Add a .env.example file",
-      "description": "Document required environment variables so deployers know what to configure."
-    }
+    { "category": "Security", "severity": "critical", "title": "...", "description": "..." },
+    { "category": "Infrastructure", "severity": "warning", "title": "...", "description": "..." },
+    { "category": "Environment", "severity": "info", "title": "...", "description": "..." }
   ],
   "deploymentOptions": [
-    {
-      "provider": "DigitalOcean",
-      "type": "cloud",
-      "difficulty": "easy",
-      "estimatedCost": "$5-25/mo",
-      "estimatedTime": "30-60 min",
-      "description": "Deploy to DigitalOcean App Platform for the simplest managed hosting experience."
-    },
-    {
-      "provider": "AWS",
-      "type": "cloud",
-      "difficulty": "hard",
-      "estimatedCost": "$20-100/mo",
-      "estimatedTime": "2-4 hours",
-      "description": "Deploy to AWS ECS or Elastic Beanstalk for enterprise-grade scalable cloud hosting."
-    },
-    {
-      "provider": "Google Cloud",
-      "type": "cloud",
-      "difficulty": "medium",
-      "estimatedCost": "$15-80/mo",
-      "estimatedTime": "1-2 hours",
-      "description": "Deploy to Google Cloud Run for serverless container hosting with automatic scaling."
-    },
-    {
-      "provider": "Azure",
-      "type": "cloud",
-      "difficulty": "medium",
-      "estimatedCost": "$20-90/mo",
-      "estimatedTime": "1-3 hours",
-      "description": "Deploy to Azure App Service for seamless Microsoft ecosystem integration."
-    }
+    { "provider": "DigitalOcean", "type": "cloud", "difficulty": "easy", "estimatedCost": "$5-25/mo", "estimatedTime": "30-60 min", "description": "..." },
+    { "provider": "AWS", "type": "cloud", "difficulty": "hard", "estimatedCost": "$20-100/mo", "estimatedTime": "2-4 hours", "description": "..." },
+    { "provider": "Google Cloud", "type": "cloud", "difficulty": "medium", "estimatedCost": "$15-80/mo", "estimatedTime": "1-2 hours", "description": "..." },
+    { "provider": "Azure", "type": "cloud", "difficulty": "medium", "estimatedCost": "$20-90/mo", "estimatedTime": "1-3 hours", "description": "..." }
   ]
 }`;
 
     let analysisData: any;
-
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-5-mini",
+        model: "gpt-4o-mini",
         max_completion_tokens: 2000,
         messages: [{ role: "user", content: prompt }],
       });
-
       const content = response.choices[0]?.message?.content ?? "";
-      // Strip any accidental markdown code fences
       const jsonText = content.replace(/```(?:json)?\n?/g, "").replace(/```/g, "").trim();
       analysisData = JSON.parse(jsonText);
-      logger.info({ repoId: id }, "AI analysis completed successfully");
+      logger.info({ repoId: id, hasRealFiles: !!repoFileContext }, "AI analysis completed");
     } catch (aiErr) {
       logger.warn({ aiErr }, "AI analysis failed, using rule-based fallback");
-      // Deterministic fallback based on repo metadata
-      const langScores: Record<string, number> = {
-        TypeScript: 72, JavaScript: 68, Python: 65, Go: 80, Rust: 82, Java: 70,
-      };
+      const langScores: Record<string, number> = { TypeScript: 72, JavaScript: 68, Python: 65, Go: 80, Rust: 82, Java: 70 };
       const base = langScores[repo.language ?? ""] ?? 60;
       analysisData = {
         overallScore: base,

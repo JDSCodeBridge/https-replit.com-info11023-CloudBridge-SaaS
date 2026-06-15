@@ -6,3 +6,4 @@ export * from "./service_requests";
 export * from "./subscriptions";
 export * from "./activity";
 export * from "./cloud_accounts";
+export * from "./audit_logs";

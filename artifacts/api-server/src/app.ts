@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import cors from "cors";
 import pinoHttp from "pino-http";
+import helmet from "helmet";
 import { clerkMiddleware } from "@clerk/express";
 import { publishableKeyFromHost } from "@clerk/shared/keys";
 import {
@@ -8,27 +9,32 @@ import {
   clerkProxyMiddleware,
   getClerkProxyHost,
 } from "./middlewares/clerkProxyMiddleware";
+import { globalRateLimit } from "./middlewares/rateLimiter";
+import { auditLogger } from "./middlewares/auditLogger";
 import router from "./routes";
 import { logger } from "./lib/logger";
 import { WebhookHandlers } from "./webhookHandlers";
 
 const app: Express = express();
 
+// Trust the Replit/proxy X-Forwarded-For header (required for rate limiting)
+app.set("trust proxy", 1);
+
+// Phase 7: Security headers via Helmet
+app.use(helmet({
+  crossOriginEmbedderPolicy: false,
+  contentSecurityPolicy: false,
+}));
+
 app.use(
   pinoHttp({
     logger,
     serializers: {
       req(req) {
-        return {
-          id: req.id,
-          method: req.method,
-          url: req.url?.split("?")[0],
-        };
+        return { id: req.id, method: req.method, url: req.url?.split("?")[0] };
       },
       res(res) {
-        return {
-          statusCode: res.statusCode,
-        };
+        return { statusCode: res.statusCode };
       },
     },
   }),
@@ -36,16 +42,13 @@ app.use(
 
 app.use(CLERK_PROXY_PATH, clerkProxyMiddleware());
 
-// Stripe webhook MUST be registered before express.json() — needs raw Buffer
+// Stripe webhook MUST be before express.json() — needs raw Buffer
 app.post(
   "/api/stripe/webhook",
   express.raw({ type: "application/json" }),
   async (req, res) => {
     const signature = req.headers["stripe-signature"];
-    if (!signature) {
-      res.status(400).json({ error: "Missing stripe-signature header" });
-      return;
-    }
+    if (!signature) { res.status(400).json({ error: "Missing stripe-signature header" }); return; }
     const sig = Array.isArray(signature) ? signature[0] : signature;
     try {
       await WebhookHandlers.processWebhook(req.body as Buffer, sig);
@@ -58,8 +61,11 @@ app.post(
 );
 
 app.use(cors({ credentials: true, origin: true }));
-app.use(express.json());
+app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Phase 5: Global rate limiting
+app.use(globalRateLimit);
 
 app.use(
   clerkMiddleware((req) => ({
@@ -69,6 +75,9 @@ app.use(
     ),
   })),
 );
+
+// Phase 5: Audit logging for write operations
+app.use("/api", auditLogger);
 
 app.use("/api", router);
 
