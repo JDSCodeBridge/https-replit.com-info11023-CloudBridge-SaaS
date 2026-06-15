@@ -95,6 +95,87 @@ export class GithubClient {
   }
 }
 
+export class GithubClientWriter {
+  private token: string;
+  private baseUrl = "https://api.github.com";
+
+  constructor(token: string) {
+    this.token = token;
+  }
+
+  private get headers() {
+    return {
+      Authorization: `Bearer ${this.token}`,
+      Accept: "application/vnd.github+json",
+      "X-GitHub-Api-Version": "2022-11-28",
+      "Content-Type": "application/json",
+    };
+  }
+
+  private async post<T>(path: string, body: unknown): Promise<T> {
+    const res = await fetch(`${this.baseUrl}${path}`, {
+      method: "POST",
+      headers: this.headers,
+      body: JSON.stringify(body),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({})) as any;
+      throw new Error(err.message ?? `GitHub API error: HTTP ${res.status}`);
+    }
+    return res.json() as Promise<T>;
+  }
+
+  async createRepo(name: string, description: string, isPrivate: boolean): Promise<{ fullName: string; htmlUrl: string; defaultBranch: string }> {
+    const data = await this.post<any>("/user/repos", {
+      name,
+      description,
+      private: isPrivate,
+      auto_init: false,
+    });
+    return { fullName: data.full_name, htmlUrl: data.html_url, defaultBranch: data.default_branch ?? "main" };
+  }
+
+  async pushFilesToNewRepo(owner: string, repo: string, files: Record<string, string>): Promise<void> {
+    const base = `/repos/${owner}/${repo}`;
+
+    // 1. Create blobs for each file (in parallel, max 20 at a time)
+    const entries = Object.entries(files).slice(0, 200);
+    const blobs: { path: string; sha: string }[] = [];
+
+    for (let i = 0; i < entries.length; i += 20) {
+      const batch = entries.slice(i, i + 20);
+      const results = await Promise.all(
+        batch.map(async ([path, content]) => {
+          const blob = await this.post<any>(`${base}/git/blobs`, {
+            content: Buffer.from(content).toString("base64"),
+            encoding: "base64",
+          });
+          return { path, sha: blob.sha };
+        })
+      );
+      blobs.push(...results);
+    }
+
+    // 2. Create tree
+    const tree = await this.post<any>(`${base}/git/trees`, {
+      tree: blobs.map(({ path, sha }) => ({ path, mode: "100644", type: "blob", sha })),
+    });
+
+    // 3. Create initial commit (no parents)
+    const commit = await this.post<any>(`${base}/git/commits`, {
+      message: "Import from Replit via CloudLift",
+      tree: tree.sha,
+      parents: [],
+    });
+
+    // 4. Create main branch ref
+    await this.post(`${base}/git/refs`, {
+      ref: "refs/heads/main",
+      sha: commit.sha,
+    });
+  }
+}
+
 export async function validateGithubToken(token: string): Promise<{ ok: boolean; username?: string; name?: string; error?: string }> {
   try {
     const client = new GithubClient(token);

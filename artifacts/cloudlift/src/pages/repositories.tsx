@@ -9,12 +9,18 @@ import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { useQueryClient, useQuery } from "@tanstack/react-query";
+import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
+import { useAuth } from "@clerk/react";
+import { useToast } from "@/hooks/use-toast";
 import {
   GitBranch, Plus, ArrowRight, Trash2, Zap,
   Lock, Unlock, Github, Search, RefreshCw, AlertCircle,
+  CheckCircle2, Loader2, ChevronRight,
 } from "lucide-react";
 import { useState } from "react";
+
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, "");
+function apiUrl(path: string) { return `${BASE}/api${path}`; }
 
 const statusStyle: Record<string, string> = {
   not_deployed: "border-border/40 text-muted-foreground",
@@ -36,17 +42,35 @@ type GithubRepo = {
   stars: number;
 };
 
+type ReplitPreview = {
+  username: string;
+  slug: string;
+  title: string;
+  description: string;
+  language: string | null;
+  isPrivate: boolean;
+};
+
+type ImportStep = "idle" | "fetching" | "creating" | "pushing" | "connecting" | "done";
+
+const IMPORT_STEPS: { key: ImportStep; label: string }[] = [
+  { key: "fetching", label: "Fetching from Replit" },
+  { key: "creating", label: "Creating GitHub repository" },
+  { key: "pushing", label: "Pushing code to GitHub" },
+  { key: "connecting", label: "Connecting to CloudLift" },
+];
+
 function useGithubStatus() {
   return useQuery<{ connected: boolean; username: string | null }>({
     queryKey: ["/api/github/status"],
-    queryFn: () => fetch("/api/github/status").then(r => r.json()),
+    queryFn: () => fetch(apiUrl("/github/status")).then(r => r.json()),
   });
 }
 
 function useGithubRepos(enabled: boolean) {
   return useQuery<GithubRepo[]>({
     queryKey: ["/api/github/repos"],
-    queryFn: () => fetch("/api/github/repos").then(async r => {
+    queryFn: () => fetch(apiUrl("/github/repos")).then(async r => {
       const data = await r.json();
       if (!r.ok) throw new Error((data as any).error ?? "Failed to load repos");
       return data;
@@ -56,20 +80,36 @@ function useGithubRepos(enabled: boolean) {
   });
 }
 
+function ReplitIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M2 5.5A3.5 3.5 0 0 1 5.5 2H11a.5.5 0 0 1 0 1H5.5A2.5 2.5 0 0 0 3 5.5v5A2.5 2.5 0 0 0 5.5 13H11a.5.5 0 0 1 0 1H5.5A3.5 3.5 0 0 1 2 10.5v-5ZM13 12.5a.5.5 0 0 1 .5-.5h5a3.5 3.5 0 0 1 3.5 3.5v2a3.5 3.5 0 0 1-3.5 3.5h-5a.5.5 0 0 1 0-1h5a2.5 2.5 0 0 0 2.5-2.5v-2a2.5 2.5 0 0 0-2.5-2.5h-5a.5.5 0 0 1-.5-.5ZM2 15.5A3.5 3.5 0 0 1 5.5 12H11a.5.5 0 0 1 0 1H5.5A2.5 2.5 0 0 0 3 15.5v3A2.5 2.5 0 0 0 5.5 21H11a.5.5 0 0 1 0 1H5.5A3.5 3.5 0 0 1 2 18.5v-3Z"/>
+    </svg>
+  );
+}
+
 export default function Repositories() {
   const { data: repos, isLoading } = useListRepositories();
   const connectMutation = useConnectRepository();
   const deleteMutation = useDeleteRepository();
   const qc = useQueryClient();
+  const { getToken } = useAuth();
+  const { toast } = useToast();
 
   const { data: githubStatus } = useGithubStatus();
   const isGithubConnected = githubStatus?.connected ?? false;
 
   const [adding, setAdding] = useState(false);
-  const [mode, setMode] = useState<"github" | "manual">("github");
+  const [mode, setMode] = useState<"github" | "manual" | "replit">("github");
   const [search, setSearch] = useState("");
   const [form, setForm] = useState({ name: "", fullName: "", githubUrl: "", isPrivate: false, description: "" });
   const [limitError, setLimitError] = useState<string | null>(null);
+
+  const [replitUrl, setReplitUrl] = useState("");
+  const [replitPreview, setReplitPreview] = useState<ReplitPreview | null>(null);
+  const [replitRepoName, setReplitRepoName] = useState("");
+  const [importStep, setImportStep] = useState<ImportStep>("idle");
+  const [importResult, setImportResult] = useState<{ repositoryId: number; fullName: string; filesImported: number } | null>(null);
 
   const { data: githubRepos, isLoading: loadingGithub, error: githubError, refetch: refetchGithub } = useGithubRepos(adding && isGithubConnected && mode === "github");
 
@@ -82,26 +122,12 @@ export default function Repositories() {
   const handleConnectFromGithub = (repo: GithubRepo) => {
     setLimitError(null);
     connectMutation.mutate(
+      { data: { name: repo.name, fullName: repo.fullName, githubUrl: repo.githubUrl, isPrivate: repo.isPrivate, description: repo.description ?? "" } },
       {
-        data: {
-          name: repo.name,
-          fullName: repo.fullName,
-          githubUrl: repo.githubUrl,
-          isPrivate: repo.isPrivate,
-          description: repo.description ?? "",
-        },
-      },
-      {
-        onSuccess: () => {
-          qc.invalidateQueries({ queryKey: getListRepositoriesQueryKey() });
-          setAdding(false);
-          setSearch("");
-        },
+        onSuccess: () => { qc.invalidateQueries({ queryKey: getListRepositoriesQueryKey() }); setAdding(false); setSearch(""); },
         onError: (err: any) => {
           const msg = err?.response?.data?.message ?? err?.message ?? "Failed to connect";
-          if (msg.includes("limit") || msg.includes("upgrade")) {
-            setLimitError(msg);
-          }
+          if (msg.includes("limit") || msg.includes("upgrade")) setLimitError(msg);
         },
       }
     );
@@ -113,11 +139,7 @@ export default function Repositories() {
     connectMutation.mutate(
       { data: form },
       {
-        onSuccess: () => {
-          qc.invalidateQueries({ queryKey: getListRepositoriesQueryKey() });
-          setAdding(false);
-          setForm({ name: "", fullName: "", githubUrl: "", isPrivate: false, description: "" });
-        },
+        onSuccess: () => { qc.invalidateQueries({ queryKey: getListRepositoriesQueryKey() }); setAdding(false); setForm({ name: "", fullName: "", githubUrl: "", isPrivate: false, description: "" }); },
         onError: (err: any) => {
           const msg = err?.response?.data?.message ?? err?.message ?? "Failed to connect";
           if (msg.includes("limit") || msg.includes("upgrade")) setLimitError(msg);
@@ -126,11 +148,85 @@ export default function Repositories() {
     );
   };
 
+  const previewMutation = useMutation({
+    mutationFn: async (url: string) => {
+      const token = await getToken();
+      const res = await fetch(apiUrl("/replit/preview"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ replitUrl: url }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Preview failed");
+      return data as ReplitPreview;
+    },
+    onSuccess: (data) => {
+      setReplitPreview(data);
+      setReplitRepoName(data.slug.toLowerCase().replace(/[^a-z0-9-]/g, "-"));
+    },
+    onError: (err: any) => {
+      toast({ title: err.message ?? "Could not fetch Replit project", variant: "destructive" });
+    },
+  });
+
+  const importMutation = useMutation({
+    mutationFn: async () => {
+      if (!replitPreview) throw new Error("No preview data");
+      const token = await getToken();
+
+      setImportStep("fetching");
+      await new Promise(r => setTimeout(r, 600));
+
+      setImportStep("creating");
+      const res = await fetch(apiUrl("/replit/import"), {
+        method: "POST",
+        headers: { "Content-Type": "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({
+          username: replitPreview.username,
+          slug: replitPreview.slug,
+          title: replitPreview.title,
+          description: replitPreview.description,
+          language: replitPreview.language,
+          repoName: replitRepoName,
+          isPrivate: false,
+        }),
+      });
+
+      setImportStep("pushing");
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Import failed");
+
+      setImportStep("connecting");
+      await new Promise(r => setTimeout(r, 400));
+
+      setImportStep("done");
+      return data as { repositoryId: number; fullName: string; filesImported: number };
+    },
+    onSuccess: (data) => {
+      setImportResult(data);
+      qc.invalidateQueries({ queryKey: getListRepositoriesQueryKey() });
+    },
+    onError: (err: any) => {
+      setImportStep("idle");
+      toast({ title: err.message ?? "Import failed", variant: "destructive" });
+    },
+  });
+
+  const resetReplitForm = () => {
+    setReplitUrl("");
+    setReplitPreview(null);
+    setReplitRepoName("");
+    setImportStep("idle");
+    setImportResult(null);
+  };
+
   const handleDelete = (id: number) => {
     deleteMutation.mutate({ id }, {
       onSuccess: () => qc.invalidateQueries({ queryKey: getListRepositoriesQueryKey() }),
     });
   };
+
+  const stepIndex = IMPORT_STEPS.findIndex(s => s.key === importStep);
 
   return (
     <AppLayout>
@@ -141,7 +237,7 @@ export default function Repositories() {
             <p className="text-muted-foreground text-sm">Connect your GitHub repositories for AI-powered deployment analysis.</p>
           </div>
           <Button
-            onClick={() => { setAdding(!adding); setLimitError(null); }}
+            onClick={() => { setAdding(!adding); setLimitError(null); if (adding) resetReplitForm(); }}
             className="bg-primary text-primary-foreground hover:bg-primary/90 gap-2"
           >
             <Plus className="w-4 h-4" />
@@ -161,25 +257,169 @@ export default function Repositories() {
 
         {adding && (
           <Card className="border-primary/20 bg-primary/5 p-5 mb-6">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3 mb-4 flex-wrap">
               <h3 className="text-sm font-semibold">Add Repository</h3>
               <div className="flex rounded-md border border-border/40 overflow-hidden text-xs">
                 <button
-                  className={`px-3 py-1 transition-colors ${mode === "github" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                  onClick={() => setMode("github")}
+                  className={`px-3 py-1.5 transition-colors flex items-center gap-1 ${mode === "github" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => { setMode("github"); resetReplitForm(); }}
                 >
-                  <Github className="w-3 h-3 inline mr-1" />From GitHub
+                  <Github className="w-3 h-3" /> From GitHub
                 </button>
                 <button
-                  className={`px-3 py-1 transition-colors ${mode === "manual" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-                  onClick={() => setMode("manual")}
+                  className={`px-3 py-1.5 transition-colors flex items-center gap-1 ${mode === "replit" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => { setMode("replit"); resetReplitForm(); }}
+                >
+                  <ReplitIcon className="w-3 h-3" /> From Replit
+                  <span className="ml-1 text-[9px] bg-accent/20 text-accent px-1 py-0.5 rounded font-semibold">NEW</span>
+                </button>
+                <button
+                  className={`px-3 py-1.5 transition-colors ${mode === "manual" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+                  onClick={() => { setMode("manual"); resetReplitForm(); }}
                 >
                   Manual
                 </button>
               </div>
             </div>
 
-            {mode === "github" ? (
+            {mode === "replit" && (
+              <div className="space-y-4">
+                {importStep === "done" && importResult ? (
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3 p-4 rounded-lg bg-green-500/10 border border-green-500/20">
+                      <CheckCircle2 className="w-5 h-5 text-green-400 shrink-0" />
+                      <div>
+                        <div className="text-sm font-medium text-green-400">Import successful!</div>
+                        <div className="text-xs text-muted-foreground mt-0.5">
+                          {importResult.filesImported > 0
+                            ? `${importResult.filesImported} files pushed to `
+                            : "Repository created at "}
+                          <a href={`https://github.com/${importResult.fullName}`} target="_blank" rel="noreferrer" className="text-primary underline underline-offset-2">
+                            {importResult.fullName}
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button asChild size="sm" className="bg-primary text-primary-foreground gap-1.5">
+                        <Link href={`/repositories/${importResult.repositoryId}`}>
+                          <Zap className="w-3.5 h-3.5" /> Run AI Analysis
+                        </Link>
+                      </Button>
+                      <Button size="sm" variant="outline" className="border-border/40" onClick={() => { resetReplitForm(); setAdding(false); }}>
+                        Done
+                      </Button>
+                    </div>
+                  </div>
+                ) : importStep !== "idle" ? (
+                  <div className="space-y-3">
+                    <p className="text-xs text-muted-foreground">Importing your Replit project…</p>
+                    <div className="space-y-2">
+                      {IMPORT_STEPS.map((step, i) => {
+                        const current = i === stepIndex;
+                        const done = i < stepIndex || importStep === "done";
+                        return (
+                          <div key={step.key} className={`flex items-center gap-3 text-sm transition-colors ${done ? "text-green-400" : current ? "text-foreground" : "text-muted-foreground/40"}`}>
+                            {done ? (
+                              <CheckCircle2 className="w-4 h-4 shrink-0" />
+                            ) : current ? (
+                              <Loader2 className="w-4 h-4 shrink-0 animate-spin" />
+                            ) : (
+                              <div className="w-4 h-4 shrink-0 rounded-full border border-border/40" />
+                            )}
+                            {step.label}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                ) : replitPreview ? (
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-3 p-3 rounded-lg border border-border/30 bg-secondary/10">
+                      <ReplitIcon className="w-4 h-4 mt-0.5 text-primary shrink-0" />
+                      <div className="min-w-0">
+                        <div className="text-sm font-medium">{replitPreview.title}</div>
+                        {replitPreview.description && (
+                          <div className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{replitPreview.description}</div>
+                        )}
+                        <div className="flex items-center gap-2 mt-1">
+                          {replitPreview.language && (
+                            <Badge variant="secondary" className="text-[10px]">{replitPreview.language}</Badge>
+                          )}
+                          <span className="text-[10px] text-muted-foreground">by {replitPreview.username}</span>
+                          {replitPreview.isPrivate && <Lock className="w-3 h-3 text-muted-foreground" />}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">GitHub repository name</label>
+                      <div className="flex gap-2">
+                        <input
+                          className="flex-1 text-sm bg-secondary/30 border border-border/40 rounded-md px-3 py-2 outline-none focus:border-primary/50 transition-colors"
+                          value={replitRepoName}
+                          onChange={e => setReplitRepoName(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, "-"))}
+                          placeholder="my-project"
+                        />
+                      </div>
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Will be created at github.com/{githubStatus?.username ?? "you"}/{replitRepoName || "…"}
+                      </p>
+                    </div>
+
+                    {!isGithubConnected && (
+                      <div className="flex items-start gap-2 p-3 rounded-lg border border-yellow-500/20 bg-yellow-500/5 text-xs text-yellow-300">
+                        <AlertCircle className="w-3.5 h-3.5 shrink-0 mt-0.5" />
+                        GitHub not connected. <Link href="/settings" className="underline ml-1">Add your PAT in Settings</Link>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="bg-primary text-primary-foreground gap-1.5"
+                        onClick={() => importMutation.mutate()}
+                        disabled={!replitRepoName || !isGithubConnected || importMutation.isPending}
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                        Import to CloudLift
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-xs" onClick={resetReplitForm}>Back</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground mb-1 block">Replit project URL</label>
+                      <input
+                        className="w-full text-sm bg-secondary/30 border border-border/40 rounded-md px-3 py-2 outline-none focus:border-primary/50 transition-colors"
+                        placeholder="https://replit.com/@username/project-name"
+                        value={replitUrl}
+                        onChange={e => setReplitUrl(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter" && replitUrl) previewMutation.mutate(replitUrl); }}
+                      />
+                      <p className="text-[10px] text-muted-foreground mt-1">Must be a public Replit project for automatic file import.</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button
+                        size="sm"
+                        className="bg-primary text-primary-foreground gap-1.5"
+                        onClick={() => previewMutation.mutate(replitUrl)}
+                        disabled={!replitUrl || previewMutation.isPending}
+                      >
+                        {previewMutation.isPending
+                          ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          : <ChevronRight className="w-3.5 h-3.5" />}
+                        {previewMutation.isPending ? "Fetching…" : "Preview Project"}
+                      </Button>
+                      <Button size="sm" variant="ghost" className="text-xs" onClick={() => setAdding(false)}>Cancel</Button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {mode === "github" && (
               isGithubConnected ? (
                 <div className="space-y-3">
                   <div className="relative">
@@ -244,6 +484,9 @@ export default function Repositories() {
                       })}
                     </div>
                   )}
+                  <div className="pt-2 border-t border-border/20 flex justify-end">
+                    <Button size="sm" variant="ghost" onClick={() => setAdding(false)} className="text-xs">Cancel</Button>
+                  </div>
                 </div>
               ) : (
                 <div className="text-center py-6 space-y-3">
@@ -262,7 +505,9 @@ export default function Repositories() {
                   </div>
                 </div>
               )
-            ) : (
+            )}
+
+            {mode === "manual" && (
               <div className="space-y-3">
                 <div className="grid grid-cols-2 gap-3">
                   <div>
@@ -301,12 +546,6 @@ export default function Repositories() {
                 </div>
               </div>
             )}
-
-            {mode === "github" && (
-              <div className="mt-3 pt-3 border-t border-border/20 flex justify-end">
-                <Button size="sm" variant="ghost" onClick={() => setAdding(false)} className="text-xs">Cancel</Button>
-              </div>
-            )}
           </Card>
         )}
 
@@ -320,12 +559,16 @@ export default function Repositories() {
               <GitBranch className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <h3 className="font-semibold mb-2">No repositories yet</h3>
               <p className="text-sm text-muted-foreground mb-6 max-w-xs mx-auto">
-                Connect your first GitHub repository to start getting AI-powered deployment recommendations.
+                Connect a GitHub repo or import directly from Replit to get started.
               </p>
-              <Button onClick={() => setAdding(true)} className="bg-primary text-primary-foreground gap-2">
-                <Plus className="w-4 h-4" />
-                Connect First Repository
-              </Button>
+              <div className="flex gap-2 justify-center flex-wrap">
+                <Button onClick={() => { setAdding(true); setMode("github"); }} className="bg-primary text-primary-foreground gap-2">
+                  <Github className="w-4 h-4" /> From GitHub
+                </Button>
+                <Button onClick={() => { setAdding(true); setMode("replit"); }} variant="outline" className="border-border/40 gap-2">
+                  <ReplitIcon className="w-4 h-4" /> From Replit
+                </Button>
+              </div>
             </div>
           ) : (
             <div className="divide-y divide-border/30">
