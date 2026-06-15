@@ -40,7 +40,8 @@ async function getStripeCredentials(): Promise<{ secretKey: string; webhookSecre
 
   return {
     secretKey: settings.secret,
-    webhookSecret: settings.webhook_secret,
+    // Prefer the integration's webhook_secret, fall back to env var
+    webhookSecret: settings.webhook_secret ?? process.env.STRIPE_WEBHOOK_SECRET,
   };
 }
 
