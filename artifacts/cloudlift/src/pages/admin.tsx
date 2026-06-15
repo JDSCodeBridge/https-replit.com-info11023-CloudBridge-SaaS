@@ -265,7 +265,8 @@ function UsersTab() {
   const [search, setSearch] = useState("");
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
 
-  const filtered = (users ?? [])
+  const safeUsers = Array.isArray(users) ? users : [];
+  const filtered = safeUsers
     .filter(u => !search || u.email.toLowerCase().includes(search.toLowerCase()) || u.name?.toLowerCase().includes(search.toLowerCase()))
     .sort((a, b) => {
       const d = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
@@ -333,16 +334,17 @@ function SubscriptionsTab() {
   const { data: subs, isLoading } = useAdminSubscriptions();
   const [search, setSearch] = useState("");
 
-  const filtered = (subs ?? []).filter(s =>
+  const safeSubs = Array.isArray(subs) ? subs : [];
+  const filtered = safeSubs.filter(s =>
     !search || s.userEmail.toLowerCase().includes(search.toLowerCase())
   );
-  const activeCount = (subs ?? []).filter(s => s.status === "active").length;
-  const proCount = (subs ?? []).filter(s => s.plan === "pro").length;
+  const activeCount = safeSubs.filter(s => s.status === "active").length;
+  const proCount = safeSubs.filter(s => s.plan === "pro").length;
 
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-3 gap-4">
-        <StatCard label="Total Subscriptions" value={subs?.length ?? "—"} icon={CreditCard} color="text-primary" />
+        <StatCard label="Total Subscriptions" value={safeSubs.length} icon={CreditCard} color="text-primary" />
         <StatCard label="Active" value={activeCount} icon={CheckCircle} color="text-green-400" />
         <StatCard label="Pro Plan" value={proCount} icon={Shield} color="text-violet-400" />
       </div>
@@ -398,7 +400,8 @@ function DeploymentsTab() {
   const updateDeployment = useUpdateDeployment();
   const [search, setSearch] = useState("");
 
-  const filtered = (deps ?? []).filter(d =>
+  const safeDeps = Array.isArray(deps) ? deps : [];
+  const filtered = safeDeps.filter(d =>
     !search ||
     d.userEmail.toLowerCase().includes(search.toLowerCase()) ||
     d.repositoryName?.toLowerCase().includes(search.toLowerCase())
@@ -411,7 +414,7 @@ function DeploymentsTab() {
           <StatCard
             key={s}
             label={s.charAt(0).toUpperCase() + s.slice(1)}
-            value={(deps ?? []).filter(d => d.status === s).length}
+            value={safeDeps.filter(d => d.status === s).length}
             icon={s === "success" ? CheckCircle : s === "failed" ? XCircle : Rocket}
             color={s === "success" ? "text-green-400" : s === "failed" ? "text-red-400" : s === "running" ? "text-primary" : "text-yellow-400"}
           />
@@ -476,15 +479,16 @@ function ServiceRequestsTab() {
   const [editingNotes, setEditingNotes] = useState<number | null>(null);
   const [notesValue, setNotesValue] = useState("");
 
-  const filtered = (requests ?? []).filter(r =>
+  const safeRequests = Array.isArray(requests) ? requests : [];
+  const filtered = safeRequests.filter(r =>
     !search ||
     r.userEmail.toLowerCase().includes(search.toLowerCase()) ||
     r.serviceType.toLowerCase().includes(search.toLowerCase())
   );
 
-  const pendingCount = (requests ?? []).filter(r => r.status === "pending").length;
-  const inProgressCount = (requests ?? []).filter(r => r.status === "in_progress").length;
-  const completedCount = (requests ?? []).filter(r => r.status === "completed").length;
+  const pendingCount = safeRequests.filter(r => r.status === "pending").length;
+  const inProgressCount = safeRequests.filter(r => r.status === "in_progress").length;
+  const completedCount = safeRequests.filter(r => r.status === "completed").length;
 
   return (
     <div className="space-y-4">

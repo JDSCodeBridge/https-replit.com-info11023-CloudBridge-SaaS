@@ -11,11 +11,13 @@ import {
   Shield,
   LogOut,
   Cloud,
+  Server,
 } from "lucide-react";
 
 const navItems = [
   { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
   { href: "/repositories", label: "Repositories", icon: GitBranch },
+  { href: "/deployments", label: "Deployments", icon: Server },
   { href: "/launch", label: "Launch Center", icon: Rocket },
   { href: "/services", label: "Services", icon: Zap },
   { href: "/cloud-accounts", label: "Cloud Accounts", icon: Cloud },

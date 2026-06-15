@@ -2,3 +2,4 @@
 - [Cloud credentials encryption](cloud-credentials-encryption.md) — AES-256-GCM with CLOUD_CREDENTIALS_KEY env var; key set in shared environment
 - [Go-to-market strategy](gtm-strategy.md) — concierge-first: GitHub → AI analysis → pay $149 → manual deployment; automate later
 - [CloudLift all-8-phases](cloudlift-phases.md) — all phases done; trust proxy + ipKeyGenerator required for express-rate-limit v8 in Replit; Array.isArray guard needed on all admin/cloud-accounts API responses
+- [CloudLift route map](cloudlift-route-map.md) — /services is public (no Protected); /deployments exists (Protected); (x ?? []).filter crashes on 403 — use Array.isArray(x) ? x : [] in every admin tab
