@@ -1,0 +1,47 @@
+CloudLift DigitalOcean Deployment Wizard - Replit
+Build Specification
+Goal
+Improve the CloudLift deployment flow and make it usable by complete beginners with no cloud or
+engineering experience. The user should never need to understand infrastructure, servers,
+containers, or DevOps concepts.
+Step 1: Cloud Provider Selection
+Create a new screen after AI Analysis.
+Display four cloud providers: DigitalOcean (Recommended) AWS Azure Google Cloud For each
+provider show: Beginner Friendliness Estimated Monthly Cost Deployment Speed Recommended
+Use Case Highlight DigitalOcean as: "Best for most founders and AI applications."
+■ Recommended
+Estimated Cost: $5-$25/month
+Difficulty: Easy
+Step 2: DigitalOcean Connection Wizard
+Page Title: Connect Your DigitalOcean Account
+Subheadline: CloudLift will walk you through every step.
+Step A: Open DigitalOcean Login to your account Click API in the left menu Select Generate New
+Token Name the token CloudLift Select Full Access Copy the token Add Open DigitalOcean button.
+Step B: DigitalOcean API Token field.
+Button: Validate Connection.
+Step C: Show: ■ DigitalOcean Connected
+Account Name
+Available Services: App Platform Droplets Managed Databases Step 3: Deployment
+Recommendation
+Analyze repository and automatically recommend hosting.
+Example: Detected: Next.js, PostgreSQL, OpenAI API
+Recommended Hosting: DigitalOcean App Platform
+Estimated Cost: $12/month
+Estimated Deploy Time: 3 minutes
+Environment Variables Required: 4
+Step 4: Deployment Summary
+Display: Application Name, Framework, Monthly Cost, Environment Variables, Region, Database
+Required.
+Button: ■ Deploy My App
+Step 5: Deployment Progress Screen
+Show live progress: Repository Cloned, Dependencies Installed, Environment Variables
+Configured, Build Successful, Deploying Application, Configuring SSL, Assigning Domain.
+Step 6: Success Screen
+Headline: ■ Your App Is Live
+Show Application URL, Status, SSL, Response Time, Estimated Monthly Cost.
+Buttons: Open App, View Dashboard, Deploy Another App.
+Design Requirements
+Keep existing CloudLift design language: Dark theme Neon blue accents Large buttons
+Step-by-step wizard Make every screen understandable to someone who has never used cloud
+hosting before. Avoid technical jargon whenever possible. Explain every action in plain English.
+Focus on DigitalOcean first before AWS, Azure, or Google Cloud.

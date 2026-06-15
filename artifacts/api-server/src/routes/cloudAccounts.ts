@@ -90,6 +90,66 @@ router.post("/", requireAuth, async (req, res) => {
   }
 });
 
+// Lightweight token-only validation used by the deploy wizard (no DB save required)
+router.post("/validate-token", requireAuth, async (req, res) => {
+  try {
+    const user = (req as any).dbUser;
+    const { provider, token } = req.body;
+    if (!provider || !token) {
+      res.status(400).json({ ok: false, error: "provider and token are required" });
+      return;
+    }
+
+    let result;
+    switch (provider) {
+      case "digitalocean":
+        result = await validateDigitalOcean({ token });
+        break;
+      case "aws":
+        result = await validateAws({ accessKeyId: req.body.accessKeyId, secretAccessKey: req.body.secretAccessKey });
+        break;
+      default:
+        res.status(400).json({ ok: false, error: `Unsupported provider: ${provider}` });
+        return;
+    }
+
+    if (!result.ok) {
+      res.json({ ok: false, error: result.error });
+      return;
+    }
+
+    // Save/update cloud account so it's available later
+    const encrypted = encrypt(JSON.stringify(provider === "digitalocean" ? { token } : req.body));
+    const existing = await db
+      .select()
+      .from(cloudAccountsTable)
+      .where(and(eq(cloudAccountsTable.userId, user.id), eq(cloudAccountsTable.provider, provider)))
+      .limit(1);
+
+    let accountId: number;
+    if (existing.length > 0) {
+      const [updated] = await db
+        .update(cloudAccountsTable)
+        .set({ credentialsEncrypted: encrypted, status: "connected", accountLabel: result.label, validationError: null, lastValidatedAt: new Date(), updatedAt: new Date() })
+        .where(eq(cloudAccountsTable.id, existing[0].id))
+        .returning();
+      accountId = updated.id;
+    } else {
+      const [created] = await db
+        .insert(cloudAccountsTable)
+        .values({ userId: user.id, provider, credentialsEncrypted: encrypted, status: "connected", accountLabel: result.label, lastValidatedAt: new Date() })
+        .returning();
+      accountId = created.id;
+    }
+
+    const emailMatch = result.label.match(/· ([^ ]+@[^ ]+)/);
+    res.json({ ok: true, label: result.label, accountId, email: emailMatch?.[1] ?? "" });
+  } catch (err) {
+    logger.error({ err }, "POST /cloud-accounts/validate-token error");
+    res.status(500).json({ ok: false, error: "Internal server error" });
+  }
+});
+
 router.post("/:id/validate", requireAuth, async (req, res) => {
   try {
     const user = (req as any).dbUser;

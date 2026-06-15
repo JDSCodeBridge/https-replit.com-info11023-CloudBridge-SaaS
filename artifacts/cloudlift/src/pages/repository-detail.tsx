@@ -62,14 +62,8 @@ export default function RepositoryDetail() {
     });
   };
 
-  const handleDeploy = (provider: string) => {
-    serviceMutation.mutate({
-      data: {
-        serviceType: "deploy_for_me",
-        repositoryId: id,
-        description: `Deploy to ${provider}`,
-      },
-    });
+  const handleDeploy = (_provider: string) => {
+    navigate(`/repositories/${id}/deploy`);
   };
 
   if (loadingRepo) {
