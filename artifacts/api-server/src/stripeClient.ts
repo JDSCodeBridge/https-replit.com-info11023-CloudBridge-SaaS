@@ -1,7 +1,7 @@
 import Stripe from 'stripe';
 import { StripeSync } from 'stripe-replit-sync';
 
-async function getStripeCredentials(): Promise<{ secretKey: string; webhookSecret?: string }> {
+export async function getStripeCredentials(): Promise<{ secretKey: string; webhookSecret?: string }> {
   const hostname = process.env.REPLIT_CONNECTORS_HOSTNAME;
   const xReplitToken = process.env.REPL_IDENTITY
     ? "repl " + process.env.REPL_IDENTITY
@@ -45,9 +45,14 @@ async function getStripeCredentials(): Promise<{ secretKey: string; webhookSecre
   };
 }
 
+// Pin to 2024-06-20 (classic v1 API) — the dahlia API (Stripe v2, default in SDK v22+)
+// removed support for line_items[0][price] in checkout sessions.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const STRIPE_API_VERSION = '2024-06-20' as any;
+
 export async function getUncachableStripeClient(): Promise<Stripe> {
   const { secretKey } = await getStripeCredentials();
-  return new Stripe(secretKey);
+  return new Stripe(secretKey, { apiVersion: STRIPE_API_VERSION });
 }
 
 export async function getStripeSync(): Promise<StripeSync> {

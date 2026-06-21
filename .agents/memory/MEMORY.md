@@ -1,3 +1,4 @@
+- [Stripe checkout fix](stripe-checkout-fix.md) — SDK v22 dahlia API breaks checkout; use direct fetch + inline price_data instead
 - [Stripe connector fields](stripe-connector-fields.md) — fields are `secret`/`publishable`, HTTP header is `X-Replit-Token` (hyphenated)
 - [Cloud credentials encryption](cloud-credentials-encryption.md) — AES-256-GCM with CLOUD_CREDENTIALS_KEY env var; key set in shared environment
 - [Go-to-market strategy](gtm-strategy.md) — concierge-first: GitHub → AI analysis → pay $149 → manual deployment; automate later
