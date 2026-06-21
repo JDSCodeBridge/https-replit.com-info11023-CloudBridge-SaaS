@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   CheckCircle, XCircle, Clock, Trash2, RefreshCw,
-  ChevronDown, ChevronUp, Cloud, AlertCircle,
+  ChevronDown, ChevronUp, Cloud, AlertCircle, DollarSign,
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -67,6 +67,12 @@ function useDeleteAccount() {
 
 type FieldDef = { key: string; label: string; placeholder: string; type?: "textarea" | "text" | "password" };
 
+type PricingTier = {
+  label: string;
+  price: string;
+  note: string;
+};
+
 type ProviderDef = {
   id: string;
   name: string;
@@ -76,9 +82,47 @@ type ProviderDef = {
   docsUrl: string;
   fields: FieldDef[];
   guide: string[];
+  pricing: {
+    badge?: string;
+    badgeColor?: string;
+    starting: string;
+    tiers: PricingTier[];
+    freeTier?: string;
+    pricingUrl: string;
+  };
 };
 
 const PROVIDERS: ProviderDef[] = [
+  {
+    id: "digitalocean",
+    name: "DigitalOcean",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/f/ff/DigitalOcean_logo.svg",
+    color: "text-blue-400",
+    description: "Deploy to App Platform, Droplets, or Kubernetes",
+    docsUrl: "https://docs.digitalocean.com/reference/api/create-personal-access-token/",
+    fields: [
+      { key: "token", label: "Personal Access Token", placeholder: "dop_v1_...", type: "password" },
+    ],
+    guide: [
+      "Go to DigitalOcean Console → API → Tokens",
+      "Click 'Generate New Token'",
+      "Give it a name (e.g. 'CodeBridge') and enable Read + Write scope",
+      "Copy the token — it's only shown once",
+    ],
+    pricing: {
+      badge: "Best Value",
+      badgeColor: "bg-green-500/15 text-green-400 border-green-500/30",
+      starting: "from $5/mo",
+      freeTier: "$200 free credit for 60 days",
+      pricingUrl: "https://www.digitalocean.com/pricing",
+      tiers: [
+        { label: "Static site", price: "Free", note: "HTML/CSS/JS, no backend" },
+        { label: "App Platform Basic", price: "$5/mo", note: "1 container, 512MB RAM" },
+        { label: "App Platform Pro", price: "$12/mo", note: "1 vCPU, 1GB RAM — most AI apps" },
+        { label: "Managed Database", price: "+$15/mo", note: "PostgreSQL, MySQL, Redis" },
+      ],
+    },
+  },
   {
     id: "aws",
     name: "Amazon Web Services",
@@ -97,23 +141,51 @@ const PROVIDERS: ProviderDef[] = [
       "Attach the policy: AmazonEC2FullAccess (or a custom deployment policy)",
       "Copy the Access Key ID and Secret Access Key",
     ],
+    pricing: {
+      badge: "Most Powerful",
+      badgeColor: "bg-orange-500/15 text-orange-400 border-orange-500/30",
+      starting: "from $8/mo",
+      freeTier: "12 months free tier (t2.micro EC2)",
+      pricingUrl: "https://aws.amazon.com/pricing/",
+      tiers: [
+        { label: "EC2 t3.micro", price: "~$8/mo", note: "1 vCPU, 1GB RAM, free tier eligible" },
+        { label: "App Runner", price: "~$15–40/mo", note: "Fully managed, scales to zero" },
+        { label: "Elastic Beanstalk", price: "~$20–50/mo", note: "Auto-scaling web apps" },
+        { label: "RDS (PostgreSQL)", price: "+$25/mo", note: "Managed relational database" },
+      ],
+    },
   },
   {
-    id: "digitalocean",
-    name: "DigitalOcean",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/f/ff/DigitalOcean_logo.svg",
-    color: "text-blue-400",
-    description: "Deploy to App Platform, Droplets, or Kubernetes",
-    docsUrl: "https://docs.digitalocean.com/reference/api/create-personal-access-token/",
+    id: "gcp",
+    name: "Google Cloud",
+    logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg",
+    color: "text-red-400",
+    description: "Deploy to Cloud Run, GKE, or App Engine",
+    docsUrl: "https://cloud.google.com/iam/docs/creating-managing-service-accounts",
     fields: [
-      { key: "token", label: "Personal Access Token", placeholder: "dop_v1_...", type: "password" },
+      { key: "projectId", label: "Project ID", placeholder: "my-gcp-project-123456" },
+      { key: "serviceAccountJson", label: "Service Account JSON Key", placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}', type: "textarea" },
     ],
     guide: [
-      "Go to DigitalOcean Console → API → Tokens",
-      "Click 'Generate New Token'",
-      "Give it a name (e.g. 'CloudLift') and enable Read + Write scope",
-      "Copy the token — it's only shown once",
+      "Go to GCP Console → IAM & Admin → Service Accounts",
+      "Create a new service account named 'codebridge-deployer'",
+      "Grant the role: Editor (or Cloud Run Admin + Storage Admin for minimal access)",
+      "Click '⋮' → Manage Keys → Add Key → JSON",
+      "Paste the downloaded JSON file content into the field below",
     ],
+    pricing: {
+      badge: "Best for AI/ML",
+      badgeColor: "bg-red-500/15 text-red-400 border-red-500/30",
+      starting: "from $0/mo",
+      freeTier: "$300 free credit for 90 days",
+      pricingUrl: "https://cloud.google.com/pricing",
+      tiers: [
+        { label: "Cloud Run", price: "$0–10/mo", note: "Pay per request, scales to zero" },
+        { label: "App Engine Standard", price: "~$5–20/mo", note: "Managed runtime, auto-scales" },
+        { label: "GKE Autopilot", price: "~$15–40/mo", note: "Managed Kubernetes" },
+        { label: "Cloud SQL", price: "+$20/mo", note: "Managed PostgreSQL/MySQL" },
+      ],
+    },
   },
   {
     id: "azure",
@@ -130,31 +202,25 @@ const PROVIDERS: ProviderDef[] = [
     ],
     guide: [
       "Go to Azure Portal → Azure Active Directory → App registrations",
-      "Click 'New registration', name it 'CloudLift'",
+      "Click 'New registration', name it 'CodeBridge'",
       "Under 'Certificates & secrets', create a new client secret",
       "Go to Subscriptions → your subscription → Access control (IAM)",
       "Add the app as 'Contributor' on your subscription",
       "Copy Tenant ID, Client ID, Client Secret, and Subscription ID",
     ],
-  },
-  {
-    id: "gcp",
-    name: "Google Cloud",
-    logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg",
-    color: "text-red-400",
-    description: "Deploy to Cloud Run, GKE, or App Engine",
-    docsUrl: "https://cloud.google.com/iam/docs/creating-managing-service-accounts",
-    fields: [
-      { key: "projectId", label: "Project ID", placeholder: "my-gcp-project-123456" },
-      { key: "serviceAccountJson", label: "Service Account JSON Key", placeholder: '{\n  "type": "service_account",\n  "project_id": "...",\n  ...\n}', type: "textarea" },
-    ],
-    guide: [
-      "Go to GCP Console → IAM & Admin → Service Accounts",
-      "Create a new service account named 'cloudlift-deployer'",
-      "Grant the role: Editor (or Cloud Run Admin + Storage Admin for minimal access)",
-      "Click '⋮' → Manage Keys → Add Key → JSON",
-      "Paste the downloaded JSON file content into the field below",
-    ],
+    pricing: {
+      badge: "Best for Teams",
+      badgeColor: "bg-sky-500/15 text-sky-400 border-sky-500/30",
+      starting: "from $13/mo",
+      freeTier: "$200 free credit for 30 days",
+      pricingUrl: "https://azure.microsoft.com/en-us/pricing/",
+      tiers: [
+        { label: "App Service B1", price: "~$13/mo", note: "1 vCPU, 1.75GB RAM" },
+        { label: "Container Apps", price: "$0–15/mo", note: "Consumption-based, scales to zero" },
+        { label: "App Service P1v3", price: "~$55/mo", note: "2 vCPU, 8GB RAM, production" },
+        { label: "Azure SQL", price: "+$25/mo", note: "Managed SQL database" },
+      ],
+    },
   },
 ];
 
@@ -243,20 +309,43 @@ function ProviderCard({
   const isBusy = connect.isPending || validate.isPending || remove.isPending;
   const isConnected = account?.status === "connected";
 
+  const [showPricing, setShowPricing] = useState(false);
+
   return (
     <div className="rounded-xl border border-border/40 bg-card/20 overflow-hidden">
       {/* Header row */}
       <div className="flex items-center justify-between px-5 py-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 min-w-0">
           <div className="w-10 h-10 rounded-lg bg-background border border-border/40 flex items-center justify-center p-2 shrink-0">
             <img src={provider.logo} alt={provider.name} className="w-full h-full object-contain" />
           </div>
-          <div>
-            <div className="flex items-center gap-2.5">
+          <div className="min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="font-semibold text-sm">{provider.name}</span>
+              {provider.pricing.badge && (
+                <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full border ${provider.pricing.badgeColor}`}>
+                  {provider.pricing.badge}
+                </span>
+              )}
               <StatusBadge status={account?.status ?? "pending"} />
             </div>
             <p className="text-xs text-muted-foreground mt-0.5">{provider.description}</p>
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+              <span className="inline-flex items-center gap-1 text-xs font-semibold text-green-400">
+                <DollarSign className="w-3 h-3" />{provider.pricing.starting}
+              </span>
+              {provider.pricing.freeTier && (
+                <span className="text-[11px] text-primary/80 bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded-full">
+                  🎁 {provider.pricing.freeTier}
+                </span>
+              )}
+              <button
+                onClick={() => setShowPricing(p => !p)}
+                className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
+              >
+                {showPricing ? "Hide pricing" : "See pricing breakdown"}
+              </button>
+            </div>
             {account?.accountLabel && (
               <p className="text-xs text-primary mt-0.5">{account.accountLabel}</p>
             )}
@@ -302,6 +391,34 @@ function ProviderCard({
           </Button>
         </div>
       </div>
+
+      {/* Pricing breakdown */}
+      {showPricing && (
+        <div className="border-t border-border/30 px-5 py-4 bg-card/10">
+          <div className="flex items-center justify-between mb-3">
+            <span className="text-xs font-semibold text-foreground">Pricing Breakdown</span>
+            <a
+              href={provider.pricing.pricingUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="text-[11px] text-primary hover:underline"
+            >
+              Official pricing ↗
+            </a>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            {provider.pricing.tiers.map((tier) => (
+              <div key={tier.label} className="flex items-start justify-between gap-3 p-3 rounded-lg bg-background/40 border border-border/30">
+                <div>
+                  <div className="text-xs font-medium">{tier.label}</div>
+                  <div className="text-[11px] text-muted-foreground mt-0.5">{tier.note}</div>
+                </div>
+                <span className="text-xs font-bold text-green-400 shrink-0 whitespace-nowrap">{tier.price}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Expandable form */}
       {open && (
