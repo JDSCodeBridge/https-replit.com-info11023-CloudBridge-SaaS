@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/demo/"
-title = "CloudLift Demo"
+title = "CodeBridge Demo"
 version = "1.0.0"
 id = "artifacts/demo"
 router = "path"

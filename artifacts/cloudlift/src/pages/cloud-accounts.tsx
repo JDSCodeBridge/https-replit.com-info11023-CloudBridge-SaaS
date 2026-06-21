@@ -7,7 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import {
   CheckCircle, XCircle, Clock, Trash2, RefreshCw,
-  ChevronDown, ChevronUp, Cloud, AlertCircle, DollarSign,
+  ChevronDown, ChevronUp, Cloud, AlertCircle, DollarSign, ExternalLink,
 } from "lucide-react";
 
 // ── Types ──────────────────────────────────────────────────────────────────
@@ -79,6 +79,7 @@ type ProviderDef = {
   logo: string;
   color: string;
   description: string;
+  websiteUrl: string;
   docsUrl: string;
   fields: FieldDef[];
   guide: string[];
@@ -99,6 +100,7 @@ const PROVIDERS: ProviderDef[] = [
     logo: "https://upload.wikimedia.org/wikipedia/commons/f/ff/DigitalOcean_logo.svg",
     color: "text-blue-400",
     description: "Deploy to App Platform, Droplets, or Kubernetes",
+    websiteUrl: "https://www.digitalocean.com",
     docsUrl: "https://docs.digitalocean.com/reference/api/create-personal-access-token/",
     fields: [
       { key: "token", label: "Personal Access Token", placeholder: "dop_v1_...", type: "password" },
@@ -129,6 +131,7 @@ const PROVIDERS: ProviderDef[] = [
     logo: "https://upload.wikimedia.org/wikipedia/commons/9/93/Amazon_Web_Services_Logo.svg",
     color: "text-orange-400",
     description: "Deploy to EC2, App Runner, or Elastic Beanstalk",
+    websiteUrl: "https://aws.amazon.com",
     docsUrl: "https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html",
     fields: [
       { key: "accessKeyId", label: "Access Key ID", placeholder: "AKIAIOSFODNN7EXAMPLE" },
@@ -161,6 +164,7 @@ const PROVIDERS: ProviderDef[] = [
     logo: "https://upload.wikimedia.org/wikipedia/commons/5/51/Google_Cloud_logo.svg",
     color: "text-red-400",
     description: "Deploy to Cloud Run, GKE, or App Engine",
+    websiteUrl: "https://cloud.google.com",
     docsUrl: "https://cloud.google.com/iam/docs/creating-managing-service-accounts",
     fields: [
       { key: "projectId", label: "Project ID", placeholder: "my-gcp-project-123456" },
@@ -193,6 +197,7 @@ const PROVIDERS: ProviderDef[] = [
     logo: "https://upload.wikimedia.org/wikipedia/commons/f/fa/Microsoft_Azure.svg",
     color: "text-sky-400",
     description: "Deploy to App Service, Container Apps, or AKS",
+    websiteUrl: "https://azure.microsoft.com",
     docsUrl: "https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal",
     fields: [
       { key: "tenantId", label: "Tenant ID", placeholder: "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx" },
@@ -339,11 +344,30 @@ function ProviderCard({
                   🎁 {provider.pricing.freeTier}
                 </span>
               )}
+              <a
+                href={provider.pricing.pricingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-0.5 text-[11px] text-primary hover:text-primary/80 font-medium transition-colors"
+              >
+                <ExternalLink className="w-2.5 h-2.5" />
+                View pricing
+              </a>
+              <span className="text-border">·</span>
+              <a
+                href={provider.websiteUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-0.5 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <ExternalLink className="w-2.5 h-2.5" />
+                Website
+              </a>
               <button
                 onClick={() => setShowPricing(p => !p)}
                 className="text-[11px] text-muted-foreground hover:text-foreground underline underline-offset-2 transition-colors"
               >
-                {showPricing ? "Hide pricing" : "See pricing breakdown"}
+                {showPricing ? "Hide breakdown" : "Breakdown"}
               </button>
             </div>
             {account?.accountLabel && (
