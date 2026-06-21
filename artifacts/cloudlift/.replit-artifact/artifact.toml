@@ -1,6 +1,6 @@
 kind = "web"
 previewPath = "/"
-title = "CloudLift"
+title = "CodeBridge"
 version = "1.0.0"
 id = "artifacts/cloudlift"
 router = "path"
