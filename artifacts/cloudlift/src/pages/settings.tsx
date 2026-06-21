@@ -163,7 +163,7 @@ export default function Settings() {
                     Connect GitHub to see your real repositories and enable AI analysis of actual source files.
                     Create a{" "}
                     <a
-                      href="https://github.com/settings/tokens/new?scopes=repo,read:user&description=CloudLift"
+                      href="https://github.com/settings/tokens/new?scopes=repo,read:user&description=CodeBridge"
                       target="_blank"
                       rel="noopener noreferrer"
                       className="text-primary underline underline-offset-2"

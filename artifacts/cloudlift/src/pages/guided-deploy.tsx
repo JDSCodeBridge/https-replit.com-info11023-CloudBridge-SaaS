@@ -167,7 +167,7 @@ export default function GuidedDeploy() {
             <div>
               <h1 className="text-2xl font-bold tracking-tight mb-1">Deploy to {info.name}</h1>
               <p className="text-muted-foreground text-sm">
-                CloudLift generates your Dockerfile and GitHub Actions pipeline — copy them into your repo and you&apos;re live.
+                CodeBridge generates your Dockerfile and GitHub Actions pipeline — copy them into your repo and you&apos;re live.
               </p>
             </div>
           </div>

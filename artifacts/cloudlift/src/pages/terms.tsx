@@ -21,12 +21,12 @@ export default function Terms() {
         <div className="space-y-10 text-sm leading-relaxed text-muted-foreground">
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">1. Acceptance of Terms</h2>
-            <p>By accessing or using CloudLift ("the Service"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Service. These terms apply to all visitors, users, and others who access or use the Service.</p>
+            <p>By accessing or using CodeBridge ("the Service"), you agree to be bound by these Terms of Service. If you do not agree, do not use the Service. These terms apply to all visitors, users, and others who access or use the Service.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">2. Description of Service</h2>
-            <p>CloudLift provides AI-powered repository analysis, deployment readiness scoring, and concierge deployment services for developers and non-technical founders. We analyze GitHub repositories and provide recommendations for deploying applications to cloud platforms including AWS, Google Cloud, Azure, and DigitalOcean.</p>
+            <p>CodeBridge provides AI-powered repository analysis, deployment readiness scoring, and concierge deployment services for developers and non-technical founders. We analyze GitHub repositories and provide recommendations for deploying applications to cloud platforms including AWS, Google Cloud, Azure, and DigitalOcean.</p>
           </section>
 
           <section>
@@ -42,7 +42,7 @@ export default function Terms() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">4. Subscription Plans and Payments</h2>
-            <p className="mb-2">CloudLift offers the following plans:</p>
+            <p className="mb-2">CodeBridge offers the following plans:</p>
             <ul className="list-disc pl-5 space-y-1 mb-3">
               <li><strong className="text-foreground">Free Plan:</strong> Limited to 1 repository with basic AI analysis</li>
               <li><strong className="text-foreground">Pro Plan ($49.99/year):</strong> Unlimited repositories with advanced AI analysis</li>
@@ -66,17 +66,17 @@ export default function Terms() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">6. Intellectual Property</h2>
-            <p>The Service and its original content, features, and functionality are owned by CloudLift and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws. Your repositories and code remain your property. You grant CloudLift a limited license to analyze your repositories solely to provide the Service.</p>
+            <p>The Service and its original content, features, and functionality are owned by CodeBridge and are protected by international copyright, trademark, patent, trade secret, and other intellectual property laws. Your repositories and code remain your property. You grant CodeBridge a limited license to analyze your repositories solely to provide the Service.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">7. Disclaimer of Warranties</h2>
-            <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. CLOUDLIFT DOES NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR COMPLETELY SECURE. AI ANALYSIS RESULTS ARE RECOMMENDATIONS ONLY AND DO NOT GUARANTEE SUCCESSFUL DEPLOYMENT.</p>
+            <p>THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EITHER EXPRESS OR IMPLIED. CODEBRIDGE DOES NOT WARRANT THAT THE SERVICE WILL BE UNINTERRUPTED, ERROR-FREE, OR COMPLETELY SECURE. AI ANALYSIS RESULTS ARE RECOMMENDATIONS ONLY AND DO NOT GUARANTEE SUCCESSFUL DEPLOYMENT.</p>
           </section>
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">8. Limitation of Liability</h2>
-            <p>TO THE FULLEST EXTENT PERMITTED BY LAW, CLOUDLIFT SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF YOUR USE OF THE SERVICE. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID TO US IN THE 12 MONTHS PRECEDING THE CLAIM.</p>
+            <p>TO THE FULLEST EXTENT PERMITTED BY LAW, CODEBRIDGE SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING OUT OF YOUR USE OF THE SERVICE. OUR TOTAL LIABILITY SHALL NOT EXCEED THE AMOUNT YOU PAID TO US IN THE 12 MONTHS PRECEDING THE CLAIM.</p>
           </section>
 
           <section>
@@ -91,7 +91,7 @@ export default function Terms() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">11. Contact</h2>
-            <p>For questions about these Terms, please contact us at <a href="mailto:legal@cloudlift.app" className="text-primary hover:underline">legal@cloudlift.app</a>.</p>
+            <p>For questions about these Terms, please contact us at <a href="mailto:legal@codebridge.app" className="text-primary hover:underline">legal@codebridge.app</a>.</p>
           </section>
         </div>
       </div>
@@ -102,7 +102,7 @@ export default function Terms() {
           <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
           <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
         </div>
-        <p className="mt-2">© 2026 CloudLift. All rights reserved.</p>
+        <p className="mt-2">© 2026 CodeBridge. All rights reserved.</p>
       </footer>
     </div>
   );

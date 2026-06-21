@@ -40,7 +40,7 @@ function inferEnvironmentSlug(language: string | null, framework: string | null)
 }
 
 function sanitizeAppName(name: string): string {
-  return (name.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 32)) || "cloudlift-app";
+  return (name.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "").slice(0, 32)) || "codebridge-app";
 }
 
 export async function createDOApp(token: string, spec: DOAppSpec): Promise<DODeployResult> {

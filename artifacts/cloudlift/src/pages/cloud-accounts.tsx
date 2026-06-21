@@ -541,8 +541,8 @@ export default function CloudAccounts() {
         <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/5 p-4 mb-6 flex gap-3">
           <AlertCircle className="w-4 h-4 text-yellow-400 shrink-0 mt-0.5" />
           <div className="text-xs text-yellow-300/80 leading-relaxed">
-            <span className="font-semibold text-yellow-300">CloudLift is in early access.</span>{" "}
-            For Launch ($149) and Apple ($299) packages, your deployment is handled manually by the CloudLift team — you don't need to connect a cloud account unless you're on the Pro self-serve plan.
+            <span className="font-semibold text-yellow-300">CodeBridge is in early access.</span>{" "}
+            For Launch ($149) and Apple ($299) packages, your deployment is handled manually by the CodeBridge team — you don't need to connect a cloud account unless you're on the Pro self-serve plan.
           </div>
         </div>
 

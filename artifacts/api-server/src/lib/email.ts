@@ -1,8 +1,8 @@
 import { logger } from "./logger";
 
 const RESEND_API_KEY = process.env.RESEND_API_KEY;
-const FROM_EMAIL = process.env.EMAIL_FROM ?? "CloudLift <noreply@cloudlift.io>";
-const ADMIN_EMAIL = process.env.ADMIN_NOTIFY_EMAIL ?? "team@cloudlift.io";
+const FROM_EMAIL = process.env.EMAIL_FROM ?? "CodeBridge <noreply@codebridge.app>";
+const ADMIN_EMAIL = process.env.ADMIN_NOTIFY_EMAIL ?? "team@codebridge.app";
 
 async function send({ to, subject, html }: { to: string; subject: string; html: string }) {
   if (!RESEND_API_KEY) {
@@ -32,11 +32,11 @@ function base(content: string) {
 <table width="100%" cellpadding="0" cellspacing="0"><tr><td align="center" style="padding:40px 20px;">
 <table width="560" cellpadding="0" cellspacing="0" style="background:#111827;border-radius:12px;overflow:hidden;border:1px solid #1f2937;">
 <tr><td style="background:linear-gradient(135deg,#0ea5e9,#7c3aed);padding:28px 32px;">
-<span style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.5px;">☁️ CloudLift</span>
+<span style="font-size:20px;font-weight:700;color:#fff;letter-spacing:-0.5px;">🌉 CodeBridge</span>
 </td></tr>
 <tr><td style="padding:32px;">${content}</td></tr>
 <tr><td style="padding:16px 32px;border-top:1px solid #1f2937;font-size:11px;color:#6b7280;">
-CloudLift · Build with AI, Launch Anywhere · <a href="mailto:support@cloudlift.io" style="color:#6b7280;">support@cloudlift.io</a>
+CodeBridge · Build with AI, Launch Anywhere · <a href="mailto:support@codebridge.app" style="color:#6b7280;">support@codebridge.app</a>
 </td></tr>
 </table></td></tr></table></body></html>`;
 }
@@ -60,21 +60,21 @@ function highlight(label: string, value: string) {
 </div>`;
 }
 
-const BASE_URL = process.env.APP_URL ?? "https://cloudlift.io";
+const BASE_URL = process.env.APP_URL ?? "https://codebridge.app";
 
 export const Email = {
   sendWelcome(to: string, name: string) {
     const displayName = name || "there";
     send({
       to,
-      subject: "Welcome to CloudLift — let's deploy your app 🚀",
+      subject: "Welcome to CodeBridge — let's deploy your app 🚀",
       html: base(`
-        ${h1(`Hey ${displayName}, welcome to CloudLift! 🎉`)}
+        ${h1(`Hey ${displayName}, welcome to CodeBridge! 🎉`)}
         ${p("You're one step closer to getting your AI-built app live in the cloud.")}
         ${p("Here's how to get started in 3 easy steps:")}
         <ol style="margin:16px 0;padding-left:20px;color:#94a3b8;font-size:14px;line-height:2;">
           <li><strong style="color:#e2e8f0;">Connect GitHub</strong> — Go to Settings and paste your Personal Access Token</li>
-          <li><strong style="color:#e2e8f0;">Run AI Analysis</strong> — CloudLift reads your repo and gives you a readiness score</li>
+          <li><strong style="color:#e2e8f0;">Run AI Analysis</strong> — CodeBridge reads your repo and gives you a readiness score</li>
           <li><strong style="color:#e2e8f0;">Deploy or delegate</strong> — Ship it yourself or let our engineers handle it</li>
         </ol>
         ${btn(`${BASE_URL}/dashboard`, "Open your dashboard")}
@@ -86,7 +86,7 @@ export const Email = {
     const friendly = serviceType.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
     send({
       to,
-      subject: `Your CloudLift service request is confirmed — ${friendly}`,
+      subject: `Your CodeBridge service request is confirmed — ${friendly}`,
       html: base(`
         ${h1("We've got your request! ✅")}
         ${p("Our team has received your concierge service request and will begin shortly.")}
@@ -119,7 +119,7 @@ export const Email = {
     send({
       to,
       subject: isSuccess
-        ? `🚀 ${repoName} is live on CloudLift!`
+        ? `🚀 ${repoName} is live on CodeBridge!`
         : `⚠️ Deployment failed for ${repoName}`,
       html: base(`
         ${h1(isSuccess ? "Your app is live! 🎉" : "Deployment failed")}

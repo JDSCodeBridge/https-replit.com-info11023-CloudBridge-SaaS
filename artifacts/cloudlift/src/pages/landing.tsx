@@ -34,7 +34,7 @@ export default function Landing() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
             </span>
-            CloudLift AI V2 is now live
+            CodeBridge AI V2 is now live
           </div>
 
           <h1 className="text-5xl md:text-7xl font-bold tracking-tighter max-w-4xl leading-[1.1] mb-6">
@@ -43,7 +43,7 @@ export default function Landing() {
           </h1>
 
           <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mb-10 leading-relaxed font-light">
-            Your AI-built app deserves a real production home. CloudLift analyzes your repo, fixes your config, and ships to AWS, Azure, GCP, or DigitalOcean — without the DevOps headache.
+            Your AI-built app deserves a real production home. CodeBridge analyzes your repo, fixes your config, and ships to AWS, Azure, GCP, or DigitalOcean — without the DevOps headache.
           </p>
 
           <div className="flex gap-4 items-center">
@@ -62,7 +62,7 @@ export default function Landing() {
             <h2 className="text-3xl md:text-4xl font-bold tracking-tighter mb-4">
               From repo to production in <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">minutes</span>
             </h2>
-            <p className="text-muted-foreground max-w-xl mx-auto">No DevOps degree required. CloudLift handles the complexity so you can focus on building.</p>
+            <p className="text-muted-foreground max-w-xl mx-auto">No DevOps degree required. CodeBridge handles the complexity so you can focus on building.</p>
           </div>
           <div className="grid md:grid-cols-3 gap-6">
             {[
@@ -84,7 +84,7 @@ export default function Landing() {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="flex items-center gap-3">
             <Logo size="sm" />
-            <span className="text-xs text-muted-foreground">© 2026 CloudLift. All rights reserved.</span>
+            <span className="text-xs text-muted-foreground">© 2026 CodeBridge. All rights reserved.</span>
           </div>
           <nav className="flex gap-6 text-xs text-muted-foreground">
             <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>

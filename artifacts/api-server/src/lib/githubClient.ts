@@ -163,7 +163,7 @@ export class GithubClientWriter {
 
     // 3. Create initial commit (no parents)
     const commit = await this.post<any>(`${base}/git/commits`, {
-      message: "Import from Replit via CloudLift",
+      message: "Import from Replit via CodeBridge",
       tree: tree.sha,
       parents: [],
     });

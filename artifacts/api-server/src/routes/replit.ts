@@ -179,7 +179,7 @@ router.post("/import", requireAuth, async (req, res) => {
         ``,
         `## Getting Started`,
         ``,
-        `Push your Replit project files here and CloudLift will analyze them for deployment.`,
+        `Push your Replit project files here and CodeBridge will analyze them for deployment.`,
       ].filter(l => l !== undefined).join("\n");
     }
 

@@ -20,15 +20,15 @@ const chatRateLimit = rateLimit({
   legacyHeaders: false,
 });
 
-const SYSTEM_PROMPT = `You are the CloudLift support assistant — friendly, concise, and helpful.
+const SYSTEM_PROMPT = `You are the CodeBridge support assistant — friendly, concise, and helpful.
 
-CloudLift is a SaaS platform that helps non-technical founders and developers deploy their AI-built apps to the cloud. Here's what it offers:
+CodeBridge is a SaaS platform that helps non-technical founders and developers deploy their AI-built apps to the cloud. Here's what it offers:
 
 **Core Features:**
 - GitHub repository connection (PAT-based) and AI-powered analysis
 - Deployment readiness scoring (0-100) with actionable recommendations
 - Self-serve DigitalOcean App Platform deployments
-- Concierge services where CloudLift engineers deploy for you
+- Concierge services where CodeBridge engineers deploy for you
 
 **Plans:**
 - Free: 1 repository, basic analysis, community support
@@ -50,13 +50,13 @@ CloudLift is a SaaS platform that helps non-technical founders and developers de
 - AWS, Azure, Google Cloud (available via concierge)
 
 **Common Questions:**
-- "Do I need technical knowledge?" — No! That's exactly what CloudLift solves. The concierge services handle everything for you.
+- "Do I need technical knowledge?" — No! That's exactly what CodeBridge solves. The concierge services handle everything for you.
 - "What is a GitHub PAT?" — A Personal Access Token. In GitHub, go to Settings → Developer Settings → Personal Access Tokens → Generate new token. Give it "repo" scope.
 - "How long does deployment take?" — Self-serve: ~3 minutes (DigitalOcean). Concierge: 12-48 hours depending on service.
 - "Is my code safe?" — Yes. We only read your repository to analyze it. Your code never leaves GitHub's infrastructure.
 - "What kind of apps can I deploy?" — Any web app: Node.js, Python (FastAPI/Flask/Django), React, Next.js, Go, Ruby on Rails, etc.
 
-Keep answers short (2-4 sentences max unless asked for detail). Use plain language — avoid jargon. If you don't know something specific, direct the user to contact support at support@cloudlift.io.`;
+Keep answers short (2-4 sentences max unless asked for detail). Use plain language — avoid jargon. If you don't know something specific, or the user is frustrated or struggling, direct them to email our human support team at support@codebridge.app.`;
 
 router.post("/", chatRateLimit, async (req, res) => {
   try {
@@ -81,11 +81,11 @@ router.post("/", chatRateLimit, async (req, res) => {
       temperature: 0.5,
     });
 
-    const reply = completion.choices[0]?.message?.content ?? "I'm not sure about that. Please contact support@cloudlift.io for help.";
+    const reply = completion.choices[0]?.message?.content ?? "I'm not sure about that. Please email support@codebridge.app for help.";
     res.json({ reply });
   } catch (err) {
     logger.error({ err }, "POST /chat error");
-    res.status(500).json({ reply: "Something went wrong. Please try again or contact support@cloudlift.io." });
+    res.status(500).json({ reply: "Something went wrong. Please try again or email support@codebridge.app." });
   }
 });
 

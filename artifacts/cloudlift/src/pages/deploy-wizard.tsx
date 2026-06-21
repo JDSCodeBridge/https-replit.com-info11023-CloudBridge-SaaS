@@ -386,7 +386,7 @@ export default function DeployWizard() {
       </div>
       {selectedProvider !== "digitalocean" && (
         <div className="p-4 rounded-xl border border-yellow-400/20 bg-yellow-400/5 text-sm text-yellow-300 mb-6">
-          ⚠️ CloudLift's guided wizard currently supports DigitalOcean. AWS, Azure, and GCP use our
+          ⚠️ CodeBridge's guided wizard currently supports DigitalOcean. AWS, Azure, and GCP use our
           Concierge service — our team does everything for you.
         </div>
       )}
@@ -411,8 +411,8 @@ export default function DeployWizard() {
         {[
           { n: 1, title: "Open DigitalOcean", body: "Go to your DigitalOcean account and sign in. Don't have one? It's free to create." },
           { n: 2, title: 'Click "API" in the left menu', body: 'Once logged in, look for "API" in the left sidebar navigation.' },
-          { n: 3, title: "Generate a new token", body: 'Click "Generate New Token". Name it "CloudLift" so you remember what it\'s for.' },
-          { n: 4, title: "Select Full Access", body: 'Choose "Full Access" — CloudLift needs this to create and manage your app.' },
+          { n: 3, title: "Generate a new token", body: 'Click "Generate New Token". Name it "CodeBridge" so you remember what it\'s for.' },
+          { n: 4, title: "Select Full Access", body: 'Choose "Full Access" — CodeBridge needs this to create and manage your app.' },
           { n: 5, title: "Copy the token", body: "DigitalOcean will show you the token once. Copy it — you'll paste it on the next screen." },
         ].map((step) => (
           <div key={step.n} className="flex gap-4 p-4 rounded-xl border border-border/30 bg-card/20">
@@ -452,7 +452,7 @@ export default function DeployWizard() {
     <div>
       <h2 className="text-2xl font-bold mb-1">Paste your DigitalOcean token</h2>
       <p className="text-muted-foreground mb-8 text-sm">
-        Your token is encrypted and stored securely. CloudLift never shares it with anyone.
+        Your token is encrypted and stored securely. CodeBridge never shares it with anyone.
       </p>
       <div className="max-w-lg space-y-4 mb-8">
         <div>
@@ -503,7 +503,7 @@ export default function DeployWizard() {
       </div>
       <h2 className="text-2xl font-bold mb-1">DigitalOcean Connected!</h2>
       <p className="text-muted-foreground mb-8 text-sm">
-        CloudLift can now deploy apps to your account. Here's what we found:
+        CodeBridge can now deploy apps to your account. Here's what we found:
       </p>
       <div className="p-5 rounded-xl border border-green-400/20 bg-green-400/5 mb-8 space-y-3">
         <div className="flex items-center gap-2 text-green-400 font-semibold text-sm">
@@ -541,7 +541,7 @@ export default function DeployWizard() {
     <div>
       <div className="flex items-center gap-2 mb-1">
         <Zap className="w-5 h-5 text-primary" />
-        <h2 className="text-2xl font-bold">CloudLift AI Analysis</h2>
+        <h2 className="text-2xl font-bold">CodeBridge AI Analysis</h2>
       </div>
       <p className="text-muted-foreground mb-8 text-sm">
         We analyzed your repository and found the best way to deploy it.
@@ -578,7 +578,7 @@ export default function DeployWizard() {
             <div className="font-medium text-yellow-300 mb-1">🔑 Environment Variables Required</div>
             <div className="text-xs text-muted-foreground">
               We found {envCount} environment variable{envCount !== 1 ? "s" : ""} that need to be configured.
-              CloudLift will prompt you for these during deployment.
+              CodeBridge will prompt you for these during deployment.
             </div>
           </div>
         )}
@@ -587,7 +587,7 @@ export default function DeployWizard() {
           <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 text-sm">
             <div className="font-medium text-primary mb-1">🗄️ Database Detected</div>
             <div className="text-xs text-muted-foreground">
-              Your app uses {databases.join(", ")}. CloudLift will provision a managed database
+              Your app uses {databases.join(", ")}. CodeBridge will provision a managed database
               on DigitalOcean and connect it automatically.
             </div>
           </div>
@@ -597,7 +597,7 @@ export default function DeployWizard() {
           <div className="font-medium text-green-400 mb-1">✅ Ready to Deploy</div>
           <div className="text-xs text-muted-foreground">
             Your repository scored {analysis?.overallScore ?? "—"}/100 for deployment readiness.
-            CloudLift will handle all remaining configuration automatically.
+            CodeBridge will handle all remaining configuration automatically.
           </div>
         </div>
       </div>
@@ -620,7 +620,7 @@ export default function DeployWizard() {
     <div>
       <h2 className="text-2xl font-bold mb-1">Ready to launch</h2>
       <p className="text-muted-foreground mb-8 text-sm">
-        Review everything below, then hit the button. CloudLift does the rest.
+        Review everything below, then hit the button. CodeBridge does the rest.
       </p>
       <div className="rounded-xl border border-border/40 bg-card/20 divide-y divide-border/30 mb-8">
         {[
@@ -641,7 +641,7 @@ export default function DeployWizard() {
         ))}
       </div>
       <div className="p-4 rounded-xl border border-primary/20 bg-primary/5 text-xs text-muted-foreground mb-6">
-        CloudLift will charge your DigitalOcean account directly. Estimated charges may vary based on usage.
+        CodeBridge will charge your DigitalOcean account directly. Estimated charges may vary based on usage.
         You can delete the deployment from your DigitalOcean dashboard at any time.
       </div>
       <div className="flex gap-3">

@@ -251,7 +251,7 @@ export default function Launch() {
         <div className="mb-8">
           <h1 className="text-2xl font-bold tracking-tight mb-1">Launch Center</h1>
           <p className="text-muted-foreground text-sm">
-            Pick a repository and a deployment target — CloudLift handles the rest.
+            Pick a repository and a deployment target — CodeBridge handles the rest.
           </p>
         </div>
 

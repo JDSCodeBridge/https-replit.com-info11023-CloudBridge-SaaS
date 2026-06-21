@@ -91,12 +91,12 @@ router.post("/zip", requireAuth, upload.single("zipFile"), async (req, res) => {
     const { files, count } = extractZip(req.file.buffer);
 
     if (Object.keys(files).length === 0) {
-      files["README.md"] = `# ${repoName}\n\nImported via CloudLift.\n\n${description}`;
+      files["README.md"] = `# ${repoName}\n\nImported via CodeBridge.\n\n${description}`;
     }
 
     const { fullName, htmlUrl } = await writer.createRepo(
       repoName,
-      description || `Imported via CloudLift`,
+      description || `Imported via CodeBridge`,
       isPrivate === "true",
     );
 
@@ -108,7 +108,7 @@ router.post("/zip", requireAuth, upload.single("zipFile"), async (req, res) => {
       fullName,
       githubUrl: htmlUrl,
       isPrivate: isPrivate === "true",
-      description: description || `Imported via CloudLift`,
+      description: description || `Imported via CodeBridge`,
       deploymentStatus: "not_deployed",
     }).returning();
 

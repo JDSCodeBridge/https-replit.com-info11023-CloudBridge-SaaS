@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { MessageCircle, X, Send, Loader2, Bot, ChevronDown } from "lucide-react";
+import { MessageCircle, X, Send, Loader2, Bot, ChevronDown, Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
+
+const SUPPORT_EMAIL = "support@codebridge.app";
 
 interface Message {
   role: "user" | "assistant";
@@ -32,7 +34,7 @@ export default function SupportChat() {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "Hi! I'm the CloudLift assistant. How can I help you get started today?",
+      content: "Hi! I'm the CodeBridge assistant. How can I help you get started today? If you need to reach our team directly, you can email support@codebridge.app.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -95,7 +97,7 @@ export default function SupportChat() {
                 <Bot className="w-4 h-4 text-primary" />
               </div>
               <div>
-                <div className="text-sm font-semibold leading-none">CloudLift Support</div>
+                <div className="text-sm font-semibold leading-none">CodeBridge Support</div>
                 <div className="text-[10px] text-green-400 mt-0.5 flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400 inline-block" />
                   Online
@@ -177,9 +179,17 @@ export default function SupportChat() {
                 <Send className="w-4 h-4" />
               </button>
             </div>
-            <p className="text-[10px] text-muted-foreground/40 text-center mt-1.5">
-              Powered by CloudLift AI
-            </p>
+            <div className="flex items-center justify-between mt-1.5">
+              <p className="text-[10px] text-muted-foreground/40">Powered by CodeBridge AI</p>
+              <a
+                href={`mailto:${SUPPORT_EMAIL}`}
+                className="inline-flex items-center gap-1 text-[10px] text-primary/60 hover:text-primary transition-colors"
+                title="Email human support"
+              >
+                <Mail className="w-2.5 h-2.5" />
+                Email us
+              </a>
+            </div>
           </div>
         </div>
       )}

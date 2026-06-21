@@ -47,7 +47,7 @@ const IMPORT_STEPS: { key: ImportStep; label: string }[] = [
   { key: "fetching", label: "Reading project files" },
   { key: "creating", label: "Creating GitHub repository" },
   { key: "pushing", label: "Pushing code to GitHub" },
-  { key: "connecting", label: "Connecting to CloudLift" },
+  { key: "connecting", label: "Connecting to CodeBridge" },
 ];
 
 function useGithubStatus() {
@@ -209,7 +209,7 @@ export default function Repositories() {
       const formData = new FormData();
       formData.append("zipFile", zipFile);
       formData.append("repoName", claudeRepoName);
-      formData.append("description", "Imported from Claude Code via CloudLift");
+      formData.append("description", "Imported from Claude Code via CodeBridge");
       formData.append("source", "claude");
       const res = await fetch(apiUrl("/import/zip"), {
         method: "POST",
@@ -346,7 +346,7 @@ export default function Repositories() {
                 ) : (
                   <>
                     <div className="text-xs text-muted-foreground mb-2">
-                      Zip your Claude Code project folder and upload it. CloudLift creates a GitHub repo and pushes the files automatically.
+                      Zip your Claude Code project folder and upload it. CodeBridge creates a GitHub repo and pushes the files automatically.
                     </div>
 
                     <div
@@ -415,7 +415,7 @@ export default function Repositories() {
                         onClick={() => claudeImportMutation.mutate()}
                         disabled={!zipFile || !claudeRepoName || !isGithubConnected || claudeImportMutation.isPending}
                       >
-                        <ChevronRight className="w-3.5 h-3.5" /> Import to CloudLift
+                        <ChevronRight className="w-3.5 h-3.5" /> Import to CodeBridge
                       </Button>
                       <Button size="sm" variant="ghost" className="text-xs" onClick={() => setAdding(false)}>Cancel</Button>
                     </div>
@@ -462,7 +462,7 @@ export default function Repositories() {
                     )}
                     <div className="flex gap-2">
                       <Button size="sm" className="bg-primary text-primary-foreground gap-1.5" onClick={() => replitImportMutation.mutate()} disabled={!replitRepoName || !isGithubConnected || replitImportMutation.isPending}>
-                        <ChevronRight className="w-3.5 h-3.5" /> Import to CloudLift
+                        <ChevronRight className="w-3.5 h-3.5" /> Import to CodeBridge
                       </Button>
                       <Button size="sm" variant="ghost" className="text-xs" onClick={resetImport}>Back</Button>
                     </div>

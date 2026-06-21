@@ -45,7 +45,7 @@ export default function Privacy() {
 
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">3. AI Analysis and Your Code</h2>
-            <p>When you connect a repository for analysis, CloudLift uses AI (powered by OpenAI) to analyze repository metadata, file structure, and select code patterns. <strong className="text-foreground">We do not permanently store your source code.</strong> Analysis results (scores, recommendations) are stored in our database associated with your account. We do not use your code to train AI models.</p>
+            <p>When you connect a repository for analysis, CodeBridge uses AI (powered by OpenAI) to analyze repository metadata, file structure, and select code patterns. <strong className="text-foreground">We do not permanently store your source code.</strong> Analysis results (scores, recommendations) are stored in our database associated with your account. We do not use your code to train AI models.</p>
           </section>
 
           <section>
@@ -83,7 +83,7 @@ export default function Privacy() {
               <li>Object to or restrict our processing of your information</li>
               <li>Data portability — receive your data in a machine-readable format</li>
             </ul>
-            <p className="mt-2">To exercise these rights, contact us at <a href="mailto:privacy@cloudlift.app" className="text-primary hover:underline">privacy@cloudlift.app</a>.</p>
+            <p className="mt-2">To exercise these rights, contact us at <a href="mailto:privacy@codebridge.app" className="text-primary hover:underline">privacy@codebridge.app</a>.</p>
           </section>
 
           <section>
@@ -99,7 +99,7 @@ export default function Privacy() {
           <section>
             <h2 className="text-xl font-semibold text-foreground mb-3">11. Contact Us</h2>
             <p>If you have questions or concerns about this Privacy Policy, please contact us at:<br />
-              <a href="mailto:privacy@cloudlift.app" className="text-primary hover:underline">privacy@cloudlift.app</a>
+              <a href="mailto:privacy@codebridge.app" className="text-primary hover:underline">privacy@codebridge.app</a>
             </p>
           </section>
         </div>
@@ -111,7 +111,7 @@ export default function Privacy() {
           <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link>
           <Link href="/" className="hover:text-foreground transition-colors">Home</Link>
         </div>
-        <p className="mt-2">© 2026 CloudLift. All rights reserved.</p>
+        <p className="mt-2">© 2026 CodeBridge. All rights reserved.</p>
       </footer>
     </div>
   );

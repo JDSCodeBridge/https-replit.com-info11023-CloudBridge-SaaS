@@ -20,7 +20,7 @@ function Step1Welcome({ onNext, onSkip }: StepProps) {
       <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-5 border border-primary/20">
         <Rocket className="w-8 h-8 text-primary" />
       </div>
-      <h2 className="text-2xl font-bold mb-2 tracking-tight">Welcome to CloudLift</h2>
+      <h2 className="text-2xl font-bold mb-2 tracking-tight">Welcome to CodeBridge</h2>
       <p className="text-muted-foreground text-sm mb-8 max-w-sm mx-auto leading-relaxed">
         You&apos;re set up. Let&apos;s walk you through how to get your first app live in three simple steps.
       </p>
@@ -69,7 +69,7 @@ function Step2GitHub({ onNext, onSkip }: StepProps) {
       </div>
       <h2 className="text-xl font-bold mb-1 tracking-tight">Connect your GitHub</h2>
       <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
-        CloudLift needs a GitHub Personal Access Token to read your repositories and run AI analysis.
+        CodeBridge needs a GitHub Personal Access Token to read your repositories and run AI analysis.
       </p>
 
       <div className="rounded-xl border border-border/40 bg-secondary/10 divide-y divide-border/30 mb-6">
@@ -77,7 +77,7 @@ function Step2GitHub({ onNext, onSkip }: StepProps) {
           { step: "1", text: "Go to GitHub → Settings → Developer settings" },
           { step: "2", text: "Click Personal access tokens → Tokens (classic)" },
           { step: "3", text: 'Click "Generate new token" and check the repo scope' },
-          { step: "4", text: 'Copy the token (starts with ghp_) and paste it in CloudLift Settings' },
+          { step: "4", text: 'Copy the token (starts with ghp_) and paste it in CodeBridge Settings' },
         ].map(({ step, text }) => (
           <div key={step} className="flex items-start gap-3 px-4 py-3">
             <span className="w-5 h-5 rounded-full bg-primary/20 text-primary text-[10px] font-bold flex items-center justify-center shrink-0 mt-0.5">{step}</span>
