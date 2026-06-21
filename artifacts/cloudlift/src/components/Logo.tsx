@@ -10,9 +10,9 @@ export default function Logo({ size = "md" }: { size?: LogoSize }) {
   const s = sizes[size];
   return (
     <div className={`flex items-center bg-white shadow-sm ${s.wrapper}`}>
-      <img src="/logo.png" alt="CloudLift" className={`${s.img} drop-shadow-sm`} />
+      <img src="/logo.png" alt="CodeBridge" className={`${s.img} drop-shadow-sm`} />
       <span className={`tracking-tight text-[hsl(230,40%,12%)] ${s.text}`}>
-        CloudLift
+        CodeBridge
       </span>
     </div>
   );
