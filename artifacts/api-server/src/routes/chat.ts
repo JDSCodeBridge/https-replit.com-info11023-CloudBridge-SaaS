@@ -15,7 +15,7 @@ const chatRateLimit = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
   keyGenerator: (req: Request) =>
-    (req.headers["x-forwarded-for"] as string)?.split(",")[0]?.trim() ?? req.ip ?? "unknown",
+  req.ip || "unknown",
   standardHeaders: true,
   legacyHeaders: false,
 });
