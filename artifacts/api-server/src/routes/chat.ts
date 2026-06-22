@@ -14,7 +14,6 @@ const openai = new OpenAI({
 const chatRateLimit = rateLimit({
   windowMs: 60 * 1000,
   max: 10,
-  keyGenerator: () => "global",
   standardHeaders: true,
   legacyHeaders: false,
 });
