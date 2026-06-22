@@ -3,7 +3,7 @@ import { useListRepositories } from "@workspace/api-client-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Cloud, Smartphone, Zap, CheckCircle2, ArrowRight, GitBranch, ChevronDown } from "lucide-react";
+import { Cloud, Smartphone, Zap, CheckCircle2, ArrowRight, GitBranch, ChevronDown, Users } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { useLocation } from "wouter";
 
@@ -253,6 +253,24 @@ export default function Launch() {
           <p className="text-muted-foreground text-sm">
             Pick a repository and a deployment target — CodeBridge handles the rest.
           </p>
+        </div>
+
+        {/* Concierge banner */}
+        <div className="mb-8 rounded-xl border border-primary/25 bg-primary/5 px-5 py-4 flex items-start gap-4">
+          <div className="mt-0.5 w-9 h-9 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center shrink-0">
+            <Users className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground mb-0.5">
+              Human-powered deployment — we do it for you
+            </p>
+            <p className="text-xs text-muted-foreground leading-relaxed">
+              This is a <strong className="text-foreground">concierge service</strong>. After you submit, a real CodeBridge engineer reviews your repo, fixes any config issues, and deploys it to your chosen cloud provider — typically within <strong className="text-foreground">24–48 hours</strong>. You'll get an email confirmation when it's live.
+            </p>
+          </div>
+          <a href="/services" className="text-xs text-primary hover:underline font-medium shrink-0 mt-0.5 whitespace-nowrap">
+            View services →
+          </a>
         </div>
 
         {/* Step 1: Repository */}

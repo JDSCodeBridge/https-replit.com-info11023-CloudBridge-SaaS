@@ -10,7 +10,7 @@ export default function Landing() {
           <Logo size="lg" />
         </Link>
         <nav className="hidden md:flex gap-8 text-sm font-medium text-muted-foreground">
-          <Link href="#features" className="hover:text-foreground transition-colors">Features</Link>
+          <a href="#features" className="hover:text-foreground transition-colors cursor-pointer">Features</a>
           <Link href="/pricing" className="hover:text-foreground transition-colors">Pricing</Link>
           <Link href="/services" className="hover:text-foreground transition-colors">Services</Link>
         </nav>

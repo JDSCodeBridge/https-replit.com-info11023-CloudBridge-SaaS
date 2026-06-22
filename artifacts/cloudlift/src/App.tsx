@@ -112,13 +112,15 @@ function HomeRedirect() {
 }
 
 function Protected({ component: Component }: { component: React.ComponentType }) {
+  const [location] = useLocation();
+  const redirectTo = `/sign-in?redirect=${encodeURIComponent(location)}`;
   return (
     <>
       <Show when="signed-in">
         <Component />
       </Show>
       <Show when="signed-out">
-        <Redirect to="/" />
+        <Redirect to={redirectTo} />
       </Show>
     </>
   );
